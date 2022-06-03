@@ -24,7 +24,7 @@ var goServerCGETemplate string
 //go:embed templates/event_definitions.go.tmpl
 var goServerEventsTemplate string
 
-func CreateNewServer(projectName string) error {
+func CreateNewServer(projectName, libraryVersion string) error {
 	module, err := cli.Input("Project module path:")
 	if err != nil {
 		return err
@@ -44,8 +44,18 @@ func CreateNewServer(projectName string) error {
 		return err
 	}
 
-	libraryURL, err := getServerLibraryURL()
+	libraryURL, libraryTag, err := getServerLibraryURL(libraryVersion)
 	if err != nil {
+		return err
+	}
+	cli.Finish()
+
+	cli.Begin("Installing correct go-server version...")
+	out, err = external.ExecuteHidden("go", "get", fmt.Sprintf("%s@%s", libraryURL, libraryTag))
+	if err != nil {
+		if out != "" {
+			cli.Error(out)
+		}
 		return err
 	}
 	cli.Finish()
@@ -126,16 +136,25 @@ func executeGoServerTemplate(templateText, fileName, projectName, cgeVersion, li
 	})
 }
 
-func getServerLibraryURL() (string, error) {
-	tag, err := external.LatestGithubTag("code-game-project", "go-server")
-	if err != nil {
-		return "", err
+func getServerLibraryURL(serverVersion string) (url string, tag string, err error) {
+	if serverVersion == "latest" {
+		var err error
+		serverVersion, err = external.LatestGithubTag("code-game-project", "go-server")
+		if err != nil {
+			return "", "", err
+		}
+		serverVersion = strings.TrimPrefix(strings.Join(strings.Split(serverVersion, ".")[:2], "."), "v")
 	}
-	majorVersion := strings.TrimPrefix(strings.Split(tag, ".")[0], "v")
 
+	majorVersion := strings.Split(serverVersion, ".")[0]
+	tag, err = external.GithubTagFromVersion("code-game-project", "go-server", serverVersion)
+	if err != nil {
+		return "", "", err
+	}
 	path := "github.com/code-game-project/go-server/cg"
 	if majorVersion != "0" && majorVersion != "1" {
 		path = fmt.Sprintf("github.com/code-game-project/go-server/v%s/cg", majorVersion)
 	}
-	return path, nil
+
+	return path, tag, nil
 }

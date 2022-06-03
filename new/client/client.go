@@ -24,7 +24,7 @@ var goClientWrapperGameTemplate string
 //go:embed templates/wrappers/events.go.tmpl
 var goClientWrapperEventsTemplate string
 
-func CreateNewClient(projectName, gameName, serverURL, cgVersion, cgeVersion string) error {
+func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, supportsWrappers bool) error {
 	module, err := cli.Input("Project module path:")
 	if err != nil {
 		return err
@@ -38,18 +38,13 @@ func CreateNewClient(projectName, gameName, serverURL, cgVersion, cgeVersion str
 		return err
 	}
 
-	libraryURL, libraryTag, err := getGoClientLibraryURL(projectName, cgVersion)
+	libraryURL, libraryTag, err := getGoClientLibraryURL(libraryVersion)
 	if err != nil {
 		return err
 	}
 
-	cgeMajor, cgeMinor, _, err := external.ParseVersion(cgeVersion)
-	if err != nil {
-		return cli.Error(err.Error())
-	}
-
 	wrappers := false
-	if cgeMajor > 0 || cgeMinor >= 3 {
+	if supportsWrappers {
 		wrappers, err = cli.YesNo("Do you want to generate helper functions?", true)
 		if err != nil {
 			return err
@@ -67,7 +62,7 @@ func CreateNewClient(projectName, gameName, serverURL, cgVersion, cgeVersion str
 	cli.Finish()
 
 	cli.Begin("Creating project template...")
-	err = createGoClientTemplate(libraryTag, projectName, module, gameName, serverURL, libraryURL, cgeVersion, wrappers)
+	err = createGoClientTemplate(projectName, module, gameName, serverURL, libraryURL, wrappers)
 	if err != nil {
 		return err
 	}
@@ -98,17 +93,20 @@ func CreateNewClient(projectName, gameName, serverURL, cgVersion, cgeVersion str
 	return nil
 }
 
-func createGoClientTemplate(libraryTag, projectName, modulePath, gameName, serverURL, libraryURL, cgeVersion string, wrappers bool) error {
+func createGoClientTemplate(projectName, modulePath, gameName, serverURL, libraryURL string, wrappers bool) error {
 	if !wrappers {
 		return execGoClientMainTemplate(projectName, serverURL, libraryURL)
+	}
+
+	cgeVersion, err := external.GetCGEVersion(util.BaseURL(serverURL, util.IsSSL(serverURL)))
+	if err != nil {
+		return err
 	}
 
 	return execGoClientWrappersTemplate(projectName, modulePath, gameName, serverURL, libraryURL, cgeVersion)
 }
 
-func getGoClientLibraryURL(projectName, cgVersion string) (url string, tag string, err error) {
-	clientVersion := external.ClientVersionFromCGVersion("code-game-project", "go-client", cgVersion)
-
+func getGoClientLibraryURL(clientVersion string) (url string, tag string, err error) {
 	if clientVersion == "latest" {
 		var err error
 		clientVersion, err = external.LatestGithubTag("code-game-project", "go-client")
