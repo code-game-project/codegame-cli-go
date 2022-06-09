@@ -7,9 +7,9 @@ import (
 
 	_ "embed"
 
-	"github.com/code-game-project/codegame-cli-go/util"
+	"github.com/code-game-project/codegame-cli-go/new"
 	"github.com/code-game-project/codegame-cli/cli"
-	"github.com/code-game-project/codegame-cli/external"
+	"github.com/code-game-project/codegame-cli/util"
 )
 
 //go:embed templates/main.go.tmpl
@@ -17,9 +17,6 @@ var goServerMainTemplate string
 
 //go:embed templates/game.go.tmpl
 var goServerGameTemplate string
-
-//go:embed templates/events.cge.tmpl
-var goServerCGETemplate string
 
 //go:embed templates/event_definitions.go.tmpl
 var goServerEventsTemplate string
@@ -30,38 +27,25 @@ func CreateNewServer(projectName, libraryVersion string) error {
 		return err
 	}
 
-	out, err := external.ExecuteHidden("go", "mod", "init", module)
-	if err != nil {
-		if out != "" {
-			cli.Error(out)
-		}
-		return err
-	}
-
-	cli.Begin("Fetching latest version numbers...")
-	cgeVersion, err := external.LatestCGEVersion()
+	_, err = util.Execute(true, "go", "mod", "init", module)
 	if err != nil {
 		return err
 	}
 
+	cli.Begin("Installing correct go-server version...")
 	libraryURL, libraryTag, err := getServerLibraryURL(libraryVersion)
 	if err != nil {
 		return err
 	}
-	cli.Finish()
 
-	cli.Begin("Installing correct go-server version...")
-	out, err = external.ExecuteHidden("go", "get", fmt.Sprintf("%s@%s", libraryURL, libraryTag))
+	_, err = util.Execute(true, "go", "get", fmt.Sprintf("%s@%s", libraryURL, libraryTag))
 	if err != nil {
-		if out != "" {
-			cli.Error(out)
-		}
 		return err
 	}
 	cli.Finish()
 
 	cli.Begin("Creating project template...")
-	err = createGoServerTemplate(projectName, module, cgeVersion, libraryURL)
+	err = createGoServerTemplate(projectName, module, libraryURL)
 	if err != nil {
 		return err
 	}
@@ -69,11 +53,8 @@ func CreateNewServer(projectName, libraryVersion string) error {
 
 	cli.Begin("Installing dependencies...")
 
-	out, err = external.ExecuteHidden("go", "mod", "tidy")
+	_, err = util.Execute(true, "go", "mod", "tidy")
 	if err != nil {
-		if out != "" {
-			cli.Error(out)
-		}
 		return err
 	}
 
@@ -81,65 +62,56 @@ func CreateNewServer(projectName, libraryVersion string) error {
 
 	cli.Begin("Organizing imports...")
 
-	if !external.IsInstalled("goimports") {
+	if !util.IsInstalled("goimports") {
 		cli.Warn("Failed to organize import statements: 'goimports' is not installed!")
 		return nil
 	}
-	external.ExecuteHidden("goimports", "-w", "main.go")
+	util.Execute(true, "goimports", "-w", "main.go")
 
 	packageDir := strings.ReplaceAll(strings.ReplaceAll(projectName, "_", ""), "-", "")
-	external.ExecuteHidden("goimports", "-w", filepath.Join(packageDir, "game.go"))
+	util.Execute(true, "goimports", "-w", filepath.Join(packageDir, "game.go"))
 
 	cli.Finish()
 
 	return nil
 }
 
-func createGoServerTemplate(projectName, module, cgeVersion, libraryURL string) error {
-	err := executeGoServerTemplate(goServerMainTemplate, "main.go", projectName, cgeVersion, libraryURL, module)
-	if err != nil {
-		return err
-	}
-
-	err = executeGoServerTemplate(goServerCGETemplate, "events.cge", projectName, cgeVersion, libraryURL, module)
+func createGoServerTemplate(projectName, module, libraryURL string) error {
+	err := executeGoServerTemplate(goServerMainTemplate, "main.go", projectName, libraryURL, module)
 	if err != nil {
 		return err
 	}
 
 	packageName := strings.ReplaceAll(strings.ReplaceAll(projectName, "_", ""), "-", "")
 
-	err = executeGoServerTemplate(goServerGameTemplate, filepath.Join(packageName, "game.go"), projectName, cgeVersion, libraryURL, module)
+	err = executeGoServerTemplate(goServerGameTemplate, filepath.Join(packageName, "game.go"), projectName, libraryURL, module)
 	if err != nil {
 		return err
 	}
 
-	return executeGoServerTemplate(goServerEventsTemplate, filepath.Join(packageName, "event_definitions.go"), projectName, cgeVersion, libraryURL, module)
+	return executeGoServerTemplate(goServerEventsTemplate, filepath.Join(packageName, "event_definitions.go"), projectName, libraryURL, module)
 }
 
-func executeGoServerTemplate(templateText, fileName, projectName, cgeVersion, libraryURL, modulePath string) error {
+func executeGoServerTemplate(templateText, fileName, projectName, libraryURL, modulePath string) error {
 	type data struct {
-		Name          string
-		PackageName   string
-		SnakeCaseName string
-		CGEVersion    string
-		LibraryURL    string
-		ModulePath    string
+		Name        string
+		PackageName string
+		LibraryURL  string
+		ModulePath  string
 	}
 
-	return util.ExecTemplate(templateText, fileName, data{
-		Name:          projectName,
-		PackageName:   strings.ReplaceAll(strings.ReplaceAll(projectName, "_", ""), "-", ""),
-		SnakeCaseName: strings.ReplaceAll(projectName, "-", "_"),
-		CGEVersion:    cgeVersion,
-		LibraryURL:    libraryURL,
-		ModulePath:    modulePath,
+	return new.ExecTemplate(templateText, fileName, data{
+		Name:        projectName,
+		PackageName: strings.ReplaceAll(strings.ReplaceAll(projectName, "_", ""), "-", ""),
+		LibraryURL:  libraryURL,
+		ModulePath:  modulePath,
 	})
 }
 
 func getServerLibraryURL(serverVersion string) (url string, tag string, err error) {
 	if serverVersion == "latest" {
 		var err error
-		serverVersion, err = external.LatestGithubTag("code-game-project", "go-server")
+		serverVersion, err = util.LatestGithubTag("code-game-project", "go-server")
 		if err != nil {
 			return "", "", err
 		}
@@ -147,7 +119,7 @@ func getServerLibraryURL(serverVersion string) (url string, tag string, err erro
 	}
 
 	majorVersion := strings.Split(serverVersion, ".")[0]
-	tag, err = external.GithubTagFromVersion("code-game-project", "go-server", serverVersion)
+	tag, err = util.GithubTagFromVersion("code-game-project", "go-server", serverVersion)
 	if err != nil {
 		return "", "", err
 	}

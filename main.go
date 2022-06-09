@@ -8,6 +8,7 @@ import (
 
 	"github.com/code-game-project/codegame-cli-go/new/client"
 	"github.com/code-game-project/codegame-cli-go/new/server"
+	"github.com/code-game-project/codegame-cli/cli"
 	"github.com/spf13/pflag"
 )
 
@@ -50,10 +51,9 @@ func main() {
 	case "new":
 		err = new(projectName, gameName, url, libraryVersion, supportsWrappers)
 	default:
-		err = fmt.Errorf("Unknown command: %s\n", command)
+		err = cli.Error("Unknown command: %s\n", command)
 	}
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
@@ -68,7 +68,7 @@ func new(projectName, gameName, url, libraryVersion string, supportsWrappers boo
 	case "server":
 		err = server.CreateNewServer(projectName, libraryVersion)
 	default:
-		err = fmt.Errorf("Unknown project type: %s\n", projectType)
+		err = cli.Error("Unknown project type: %s\n", projectType)
 	}
 
 	return err

@@ -2,14 +2,15 @@ package client
 
 import (
 	"fmt"
+	"net/http"
 	"path/filepath"
 	"strings"
 
 	_ "embed"
 
-	"github.com/code-game-project/codegame-cli-go/util"
+	"github.com/code-game-project/codegame-cli-go/new"
 	"github.com/code-game-project/codegame-cli/cli"
-	"github.com/code-game-project/codegame-cli/external"
+	"github.com/code-game-project/codegame-cli/util"
 )
 
 //go:embed templates/main.go.tmpl
@@ -30,11 +31,8 @@ func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, su
 		return err
 	}
 
-	out, err := external.ExecuteHidden("go", "mod", "init", module)
+	_, err = util.Execute(true, "go", "mod", "init", module)
 	if err != nil {
-		if out != "" {
-			cli.Error(out)
-		}
 		return err
 	}
 
@@ -52,11 +50,8 @@ func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, su
 	}
 
 	cli.Begin("Installing correct go-client version...")
-	out, err = external.ExecuteHidden("go", "get", fmt.Sprintf("%s@%s", libraryURL, libraryTag))
+	_, err = util.Execute(true, "go", "get", fmt.Sprintf("%s@%s", libraryURL, libraryTag))
 	if err != nil {
-		if out != "" {
-			cli.Error(out)
-		}
 		return err
 	}
 	cli.Finish()
@@ -70,11 +65,8 @@ func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, su
 
 	cli.Begin("Installing dependencies...")
 
-	out, err = external.ExecuteHidden("go", "mod", "tidy")
+	_, err = util.Execute(true, "go", "mod", "tidy")
 	if err != nil {
-		if out != "" {
-			cli.Error(out)
-		}
 		return err
 	}
 
@@ -82,11 +74,11 @@ func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, su
 
 	cli.Begin("Organizing imports...")
 
-	if !external.IsInstalled("goimports") {
+	if !util.IsInstalled("goimports") {
 		cli.Warn("Failed to organize import statements: 'goimports' is not installed!")
 		return nil
 	}
-	external.ExecuteHidden("goimports", "-w", "main.go")
+	util.Execute(true, "goimports", "-w", "main.go")
 
 	cli.Finish()
 
@@ -98,7 +90,7 @@ func createGoClientTemplate(projectName, modulePath, gameName, serverURL, librar
 		return execGoClientMainTemplate(projectName, serverURL, libraryURL)
 	}
 
-	cgeVersion, err := external.GetCGEVersion(util.BaseURL(serverURL, util.IsSSL(serverURL)))
+	cgeVersion, err := util.GetCGEVersion(baseURL(serverURL, isSSL(serverURL)))
 	if err != nil {
 		return err
 	}
@@ -109,7 +101,7 @@ func createGoClientTemplate(projectName, modulePath, gameName, serverURL, librar
 func getGoClientLibraryURL(clientVersion string) (url string, tag string, err error) {
 	if clientVersion == "latest" {
 		var err error
-		clientVersion, err = external.LatestGithubTag("code-game-project", "go-client")
+		clientVersion, err = util.LatestGithubTag("code-game-project", "go-client")
 		if err != nil {
 			return "", "", err
 		}
@@ -117,7 +109,7 @@ func getGoClientLibraryURL(clientVersion string) (url string, tag string, err er
 	}
 
 	majorVersion := strings.Split(clientVersion, ".")[0]
-	tag, err = external.GithubTagFromVersion("code-game-project", "go-client", clientVersion)
+	tag, err = util.GithubTagFromVersion("code-game-project", "go-client", clientVersion)
 	if err != nil {
 		return "", "", err
 	}
@@ -135,7 +127,7 @@ func execGoClientMainTemplate(projectName, serverURL, libraryURL string) error {
 		LibraryURL string
 	}
 
-	return util.ExecTemplate(goClientMainTemplate, "main.go", data{
+	return new.ExecTemplate(goClientMainTemplate, "main.go", data{
 		URL:        serverURL,
 		LibraryURL: libraryURL,
 	})
@@ -146,7 +138,7 @@ func execGoClientWrappersTemplate(projectName, modulePath, gameName, serverURL, 
 
 	gameDir := strings.ReplaceAll(strings.ReplaceAll(gameName, "-", ""), "_", "")
 
-	eventNames, err := external.GetEventNames(util.BaseURL(serverURL, util.IsSSL(serverURL)), cgeVersion)
+	eventNames, err := util.GetEventNames(baseURL(serverURL, isSSL(serverURL)), cgeVersion)
 	if err != nil {
 		return err
 	}
@@ -181,20 +173,37 @@ func execGoClientWrappersTemplate(projectName, modulePath, gameName, serverURL, 
 		Events:      events,
 	}
 
-	err = util.ExecTemplate(goClientWrapperMainTemplate, filepath.Join("main.go"), data)
+	err = new.ExecTemplate(goClientWrapperMainTemplate, filepath.Join("main.go"), data)
 	if err != nil {
 		return err
 	}
 
-	err = util.ExecTemplate(goClientWrapperGameTemplate, filepath.Join(gameDir, "game.go"), data)
+	err = new.ExecTemplate(goClientWrapperGameTemplate, filepath.Join(gameDir, "game.go"), data)
 	if err != nil {
 		return err
 	}
 
-	err = util.ExecTemplate(goClientWrapperEventsTemplate, filepath.Join(gameDir, "events.go"), data)
+	err = new.ExecTemplate(goClientWrapperEventsTemplate, filepath.Join(gameDir, "events.go"), data)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func baseURL(domain string, ssl bool) string {
+	if ssl {
+		return "https://" + domain
+	} else {
+		return "http://" + domain
+	}
+}
+
+func isSSL(domain string) bool {
+	res, err := http.Get("https://" + domain)
+	if err == nil {
+		res.Body.Close()
+		return true
+	}
+	return false
 }
