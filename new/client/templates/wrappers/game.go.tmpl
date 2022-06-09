@@ -75,6 +75,24 @@ func ReconnectGame(username string) (*Game, error) {
 	}, nil
 }
 
+// Spectate joins a game as a spectator.
+func Spectate(gameId string) (*Game, error) {
+	socket, err := cg.NewSocket("{{.URL}}")
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to server: %s", err)
+	}
+
+	err = socket.Spectate(gameId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to spectate game: %s", err)
+	}
+
+	return &Game{
+		Id:     socket.Session().GameId,
+		socket: socket,
+	}, nil
+}
+
 // Run starts the event loop (blocking).
 func (g *Game) Run() error {
 	return g.socket.RunEventLoop()
@@ -87,6 +105,16 @@ func (g *Game) Update() error {
 		_, ok, err = g.socket.NextEvent()
 	}
 	return err
+}
+
+// ResolveUsername returns the username associated with playerId.
+func (g *Game) ResolveUsername(playerId string) string {
+	return g.socket.ResolveUsername(playerId)
+}
+
+// Session returns details of the current session.
+func (g *Game) Session() cg.Session {
+	return g.socket.Session()
 }
 
 // Disconnect closes the underlying socket connection.
