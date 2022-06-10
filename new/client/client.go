@@ -25,7 +25,7 @@ var goClientWrapperGameTemplate string
 //go:embed templates/wrappers/events.go.tmpl
 var goClientWrapperEventsTemplate string
 
-func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, supportsWrappers bool) error {
+func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, generateWrappers bool) error {
 	module, err := cli.Input("Project module path:")
 	if err != nil {
 		return err
@@ -41,14 +41,6 @@ func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, su
 		return err
 	}
 
-	wrappers := false
-	if supportsWrappers {
-		wrappers, err = cli.YesNo("Do you want to generate helper functions?", true)
-		if err != nil {
-			return err
-		}
-	}
-
 	cli.Begin("Installing correct go-client version...")
 	_, err = util.Execute(true, "go", "get", fmt.Sprintf("%s@%s", libraryURL, libraryTag))
 	if err != nil {
@@ -57,7 +49,7 @@ func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, su
 	cli.Finish()
 
 	cli.Begin("Creating project template...")
-	err = createGoClientTemplate(projectName, module, gameName, serverURL, libraryURL, wrappers)
+	err = createGoClientTemplate(projectName, module, gameName, serverURL, libraryURL, generateWrappers)
 	if err != nil {
 		return err
 	}

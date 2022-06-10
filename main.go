@@ -19,8 +19,8 @@ func main() {
 	var url string
 	pflag.StringVar(&url, "url", "", "The URL of the game. (required for clients)")
 
-	var supportsWrappers bool
-	pflag.BoolVar(&supportsWrappers, "supports-wrappers", false, "Whether the wrappers are supported. (required for clients)")
+	var generateWrappers bool
+	pflag.BoolVar(&generateWrappers, "generate-wrappers", false, "Whether to generate helper functions.")
 
 	var libraryVersion string
 	pflag.StringVar(&libraryVersion, "library-version", "latest", "The version of the Go library to use, e.g. 0.8")
@@ -49,7 +49,7 @@ func main() {
 
 	switch command {
 	case "new":
-		err = new(projectName, gameName, url, libraryVersion, supportsWrappers)
+		err = new(projectName, gameName, url, libraryVersion, generateWrappers)
 	default:
 		err = cli.Error("Unknown command: %s\n", command)
 	}
@@ -58,13 +58,13 @@ func main() {
 	}
 }
 
-func new(projectName, gameName, url, libraryVersion string, supportsWrappers bool) error {
+func new(projectName, gameName, url, libraryVersion string, generateWrappers bool) error {
 	projectType := strings.ToLower(pflag.Arg(1))
 
 	var err error
 	switch projectType {
 	case "client":
-		err = client.CreateNewClient(projectName, gameName, url, libraryVersion, supportsWrappers)
+		err = client.CreateNewClient(projectName, gameName, url, libraryVersion, generateWrappers)
 	case "server":
 		err = server.CreateNewServer(projectName, libraryVersion)
 	default:
