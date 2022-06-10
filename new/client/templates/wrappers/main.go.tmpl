@@ -42,7 +42,9 @@ func main() {
 
 	fmt.Println("GameID:", game.Id)
 
-	// TODO register event listeners
+	game.OnCGErrorEvent(func(origin tictactoesimple.Player, data cg.ErrorEventData) {
+		fmt.Println("error:", data.Message)
+	})
 
 	game.Run()
 }
