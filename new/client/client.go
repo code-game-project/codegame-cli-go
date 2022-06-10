@@ -48,8 +48,13 @@ func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, ge
 	}
 	cli.Finish()
 
+	cgeVersion, err := util.GetCGEVersion(baseURL(serverURL, isSSL(serverURL)))
+	if err != nil {
+		return err
+	}
+
 	cli.Begin("Creating project template...")
-	err = createGoClientTemplate(projectName, module, gameName, serverURL, libraryURL, generateWrappers)
+	err = createGoClientTemplate(projectName, module, gameName, serverURL, libraryURL, cgeVersion, generateWrappers)
 	if err != nil {
 		return err
 	}
@@ -77,14 +82,9 @@ func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, ge
 	return nil
 }
 
-func createGoClientTemplate(projectName, modulePath, gameName, serverURL, libraryURL string, wrappers bool) error {
+func createGoClientTemplate(projectName, modulePath, gameName, serverURL, libraryURL, cgeVersion string, wrappers bool) error {
 	if !wrappers {
 		return execGoClientMainTemplate(projectName, serverURL, libraryURL)
-	}
-
-	cgeVersion, err := util.GetCGEVersion(baseURL(serverURL, isSSL(serverURL)))
-	if err != nil {
-		return err
 	}
 
 	return execGoClientWrappersTemplate(projectName, modulePath, gameName, serverURL, libraryURL, cgeVersion)
