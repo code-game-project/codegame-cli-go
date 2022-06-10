@@ -45,6 +45,115 @@ func (g *Game) Send{{.PascalName}}Event(data {{.PascalName}}EventData) error {
 }
 {{end}}
 
+
+// OnCGNewPlayerEvent triggers the callback every time the `cg_new_player` event is received.
+func (g *Game) OnCGNewPlayerEvent(callback func(origin Player, data cg.NewPlayerEventData)) cg.CallbackId {
+	return g.socket.On(cg.NewPlayerEvent, func(origin string, event cg.Event) {
+		var data cg.NewPlayerEventData
+		err := event.UnmarshalData(&data)
+		if err == nil {
+			username := g.socket.ResolveUsername(origin)
+			if origin == "server" {
+				username = "Server"
+			}
+			callback(Player{
+				Id:       origin,
+				Username: username,
+			}, data)
+		}
+	})
+}
+
+// OnCGNewPlayerEventOnce triggers the callback the next time the `cg_new_player` event is received.
+func (g *Game) OnCGNewPlayerEventOnce(callback func(origin Player, data cg.NewPlayerEventData)) cg.CallbackId {
+	return g.socket.Once(cg.NewPlayerEvent, func(origin string, event cg.Event) {
+		var data cg.NewPlayerEventData
+		err := event.UnmarshalData(&data)
+		if err == nil {
+			username := g.socket.ResolveUsername(origin)
+			if origin == "server" {
+				username = "Server"
+			}
+			callback(Player{
+				Id:       origin,
+				Username: username,
+			}, data)
+		}
+	})
+}
+
+// OnCGLeftEvent triggers the callback every time the `cg_left` event is received.
+func (g *Game) OnCGLeftEvent(callback func(origin Player, data cg.LeftEventData)) cg.CallbackId {
+	return g.socket.On(cg.LeftEvent, func(origin string, event cg.Event) {
+		var data cg.LeftEventData
+		err := event.UnmarshalData(&data)
+		if err == nil {
+			username := g.socket.ResolveUsername(origin)
+			if origin == "server" {
+				username = "Server"
+			}
+			callback(Player{
+				Id:       origin,
+				Username: username,
+			}, data)
+		}
+	})
+}
+
+// OnCGLeftEventOnce triggers the callback the next time the `cg_left` event is received.
+func (g *Game) OnCGLeftEventOnce(callback func(origin Player, data cg.LeftEventData)) cg.CallbackId {
+	return g.socket.Once(cg.LeftEvent, func(origin string, event cg.Event) {
+		var data cg.LeftEventData
+		err := event.UnmarshalData(&data)
+		if err == nil {
+			username := g.socket.ResolveUsername(origin)
+			if origin == "server" {
+				username = "Server"
+			}
+			callback(Player{
+				Id:       origin,
+				Username: username,
+			}, data)
+		}
+	})
+}
+
+// OnCGErrorEvent triggers the callback every time the `cg_error` event is received.
+func (g *Game) OnCGErrorEvent(callback func(origin Player, data cg.ErrorEventData)) cg.CallbackId {
+	return g.socket.On(cg.ErrorEvent, func(origin string, event cg.Event) {
+		var data cg.ErrorEventData
+		err := event.UnmarshalData(&data)
+		if err == nil {
+			username := g.socket.ResolveUsername(origin)
+			if origin == "server" {
+				username = "Server"
+			}
+			callback(Player{
+				Id:       origin,
+				Username: username,
+			}, data)
+		}
+	})
+}
+
+// OnCGErrorEventOnce triggers the callback the next time the `cg_error` event is received.
+func (g *Game) OnCGErrorEventOnce(callback func(origin Player, data cg.ErrorEventData)) cg.CallbackId {
+	return g.socket.Once(cg.ErrorEvent, func(origin string, event cg.Event) {
+		var data cg.ErrorEventData
+		err := event.UnmarshalData(&data)
+		if err == nil {
+			username := g.socket.ResolveUsername(origin)
+			if origin == "server" {
+				username = "Server"
+			}
+			callback(Player{
+				Id:       origin,
+				Username: username,
+			}, data)
+		}
+	})
+}
+
 // RemoveCallback removes the callback with the specified id.
 func (g *Game) RemoveCallback(id cg.CallbackId) {
 	g.socket.RemoveCallback(id)
