@@ -48,13 +48,21 @@ func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, ge
 	}
 	cli.Finish()
 
-	cgeVersion, err := util.GetCGEVersion(baseURL(serverURL, isSSL(serverURL)))
-	if err != nil {
-		return err
+	var eventNames []string
+	if generateWrappers {
+		cgeVersion, err := util.GetCGEVersion(baseURL(serverURL, isSSL(serverURL)))
+		if err != nil {
+			return err
+		}
+
+		eventNames, err = util.GetEventNames(baseURL(serverURL, isSSL(serverURL)), cgeVersion)
+		if err != nil {
+			return err
+		}
 	}
 
 	cli.Begin("Creating project template...")
-	err = createGoClientTemplate(projectName, module, gameName, serverURL, libraryURL, cgeVersion, generateWrappers)
+	err = createGoClientTemplate(projectName, module, gameName, serverURL, libraryURL, generateWrappers, eventNames)
 	if err != nil {
 		return err
 	}
@@ -82,12 +90,12 @@ func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, ge
 	return nil
 }
 
-func createGoClientTemplate(projectName, modulePath, gameName, serverURL, libraryURL, cgeVersion string, wrappers bool) error {
+func createGoClientTemplate(projectName, modulePath, gameName, serverURL, libraryURL string, wrappers bool, eventNames []string) error {
 	if !wrappers {
 		return execGoClientMainTemplate(projectName, serverURL, libraryURL)
 	}
 
-	return execGoClientWrappersTemplate(projectName, modulePath, gameName, serverURL, libraryURL, cgeVersion)
+	return execGoClientWrappersTemplate(projectName, modulePath, gameName, serverURL, libraryURL, eventNames)
 }
 
 func getGoClientLibraryURL(clientVersion string) (url string, tag string, err error) {
@@ -125,15 +133,10 @@ func execGoClientMainTemplate(projectName, serverURL, libraryURL string) error {
 	})
 }
 
-func execGoClientWrappersTemplate(projectName, modulePath, gameName, serverURL, libraryURL, cgeVersion string) error {
+func execGoClientWrappersTemplate(projectName, modulePath, gameName, serverURL, libraryURL string, eventNames []string) error {
 	gamePackageName := strings.ReplaceAll(strings.ReplaceAll(gameName, "-", ""), "_", "")
 
 	gameDir := strings.ReplaceAll(strings.ReplaceAll(gameName, "-", ""), "_", "")
-
-	eventNames, err := util.GetEventNames(baseURL(serverURL, isSSL(serverURL)), cgeVersion)
-	if err != nil {
-		return err
-	}
 
 	type event struct {
 		Name       string
@@ -165,7 +168,7 @@ func execGoClientWrappersTemplate(projectName, modulePath, gameName, serverURL, 
 		Events:      events,
 	}
 
-	err = new.ExecTemplate(goClientWrapperMainTemplate, filepath.Join("main.go"), data)
+	err := new.ExecTemplate(goClientWrapperMainTemplate, filepath.Join("main.go"), data)
 	if err != nil {
 		return err
 	}

@@ -4,8 +4,8 @@ github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2 h1:+vx7roKuyA63n
 github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2/go.mod h1:HBCaDeC1lPdgDeDbhX8XFpy1jqjK0IBG8W5K+xYqA0w=
 github.com/adrg/xdg v0.4.0 h1:RzRqFcjH4nE5C6oTAxhBtoE2IRyjBSa62SCbyPidvls=
 github.com/adrg/xdg v0.4.0/go.mod h1:N6ag73EX4wyxeaoeHctc1mas01KZgsj5tYiAIwqJE/E=
-github.com/code-game-project/codegame-cli v0.5.1 h1:6AoWoEbLQpRCnoCVY1aqSQoTJUF1Z9JW6JIEgFMT1zc=
-github.com/code-game-project/codegame-cli v0.5.1/go.mod h1:EIgSdxiXvcgVuGLmhMgif+jpyPyi4o0xelpMHhRJG0I=
+github.com/code-game-project/codegame-cli v0.5.2 h1:CTNbA+Wz9EL0XmbHlQa1Wj7TWjwLql0HC+TpTVxvfsc=
+github.com/code-game-project/codegame-cli v0.5.2/go.mod h1:BhnklYelnBEX3q4P+pQvwv+5RisjeiFsCJ8/nBJ6Eww=
 github.com/creack/pty v1.1.17 h1:QeVUsEDNrLBW4tMgZHvxy18sKtr6VI492kBhUfhDJNI=
 github.com/creack/pty v1.1.17/go.mod h1:MOBLtS5ELjhRRrroQr9kyvTxUAFNvYEK993ew/Vr4O4=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
