@@ -42,7 +42,7 @@ func main() {
 
 	fmt.Println("GameID:", game.Id)
 
-	game.OnCGErrorEvent(func(origin tictactoesimple.Player, data cg.ErrorEventData) {
+	game.OnCGErrorEvent(func(origin {{.PackageName}}.Player, data cg.ErrorEventData) {
 		fmt.Println("error:", data.Message)
 	})
 
