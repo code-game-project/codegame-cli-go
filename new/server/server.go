@@ -13,13 +13,19 @@ import (
 )
 
 //go:embed templates/main.go.tmpl
-var goServerMainTemplate string
+var mainTemplate string
 
 //go:embed templates/game.go.tmpl
-var goServerGameTemplate string
+var gameTemplate string
 
 //go:embed templates/event_definitions.go.tmpl
-var goServerEventsTemplate string
+var eventsTemplate string
+
+//go:embed templates/Dockerfile.tmpl
+var dockerfileTemplate string
+
+//go:embed templates/dockerignore.tmpl
+var dockerignoreTemplate string
 
 func CreateNewServer(projectName, libraryVersion string) error {
 	module, err := cli.Input("Project module path:")
@@ -33,7 +39,7 @@ func CreateNewServer(projectName, libraryVersion string) error {
 	}
 
 	cli.Begin("Installing correct go-server version...")
-	libraryURL, libraryTag, err := getServerLibraryURL(libraryVersion)
+	libraryURL, libraryTag, err := getLibraryURL(libraryVersion)
 	if err != nil {
 		return err
 	}
@@ -45,7 +51,7 @@ func CreateNewServer(projectName, libraryVersion string) error {
 	cli.Finish()
 
 	cli.Begin("Creating project template...")
-	err = createGoServerTemplate(projectName, module, libraryURL)
+	err = createTemplate(projectName, module, libraryURL)
 	if err != nil {
 		return err
 	}
@@ -60,39 +66,36 @@ func CreateNewServer(projectName, libraryVersion string) error {
 
 	cli.Finish()
 
-	cli.Begin("Organizing imports...")
-
-	if !util.IsInstalled("goimports") {
-		cli.Warn("Failed to organize import statements: 'goimports' is not installed!")
-		return nil
-	}
-	util.Execute(true, "goimports", "-w", "main.go")
-
-	packageDir := strings.ReplaceAll(strings.ReplaceAll(projectName, "_", ""), "-", "")
-	util.Execute(true, "goimports", "-w", filepath.Join(packageDir, "game.go"))
-
-	cli.Finish()
-
 	return nil
 }
 
-func createGoServerTemplate(projectName, module, libraryURL string) error {
-	err := executeGoServerTemplate(goServerMainTemplate, "main.go", projectName, libraryURL, module)
+func createTemplate(projectName, module, libraryURL string) error {
+	err := executeTemplate(mainTemplate, "main.go", projectName, libraryURL, module)
+	if err != nil {
+		return err
+	}
+
+	err = executeTemplate(dockerfileTemplate, "Dockerfile", projectName, libraryURL, module)
+	if err != nil {
+		return err
+	}
+
+	err = executeTemplate(dockerignoreTemplate, ".dockerignore", projectName, libraryURL, module)
 	if err != nil {
 		return err
 	}
 
 	packageName := strings.ReplaceAll(strings.ReplaceAll(projectName, "_", ""), "-", "")
 
-	err = executeGoServerTemplate(goServerGameTemplate, filepath.Join(packageName, "game.go"), projectName, libraryURL, module)
+	err = executeTemplate(gameTemplate, filepath.Join(packageName, "game.go"), projectName, libraryURL, module)
 	if err != nil {
 		return err
 	}
 
-	return executeGoServerTemplate(goServerEventsTemplate, filepath.Join(packageName, "event_definitions.go"), projectName, libraryURL, module)
+	return executeTemplate(eventsTemplate, filepath.Join(packageName, "event_definitions.go"), projectName, libraryURL, module)
 }
 
-func executeGoServerTemplate(templateText, fileName, projectName, libraryURL, modulePath string) error {
+func executeTemplate(templateText, fileName, projectName, libraryURL, modulePath string) error {
 	type data struct {
 		Name        string
 		PackageName string
@@ -108,7 +111,7 @@ func executeGoServerTemplate(templateText, fileName, projectName, libraryURL, mo
 	})
 }
 
-func getServerLibraryURL(serverVersion string) (url string, tag string, err error) {
+func getLibraryURL(serverVersion string) (url string, tag string, err error) {
 	if serverVersion == "latest" {
 		var err error
 		serverVersion, err = util.LatestGithubTag("code-game-project", "go-server")

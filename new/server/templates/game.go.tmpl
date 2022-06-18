@@ -1,6 +1,10 @@
 package {{.PackageName}}
 
-import "{{.LibraryURL}}"
+import (
+	"fmt"
+
+	"{{.LibraryURL}}"
+)
 
 type Game struct {
 	cg     *cg.Game
