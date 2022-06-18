@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"strconv"
+	"time"
 
 	"{{.LibraryURL}}"
 	"{{.ModulePath}}/{{.PackageName}}"
@@ -26,8 +27,14 @@ func main() {
 	}
 
 	server := cg.NewServer("{{.Name}}", cg.ServerConfig{
+	DisplayName:                 "{{.Name}}",
+		Version:                 "0.1",
+		Description:             "",
+		RepositoryURL:           "",
 		Port:                    port,
 		CGEFilepath:             "events.cge",
+		DeleteInactiveGameDelay: 24 * time.Hour,
+		KickInactivePlayerDelay: 24 * time.Hour,
 	})
 
 	server.Run(func(cgGame *cg.Game) {
