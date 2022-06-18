@@ -1,6 +1,10 @@
 package main
 
-import "{{.LibraryURL}}"
+import (
+	"log"
+
+	"{{.LibraryURL}}"
+)
 
 func main() {
 	socket, err := cg.NewSocket("{{.URL}}")

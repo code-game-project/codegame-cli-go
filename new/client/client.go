@@ -14,16 +14,16 @@ import (
 )
 
 //go:embed templates/main.go.tmpl
-var goClientMainTemplate string
+var mainTemplate string
 
 //go:embed templates/wrappers/main.go.tmpl
-var goClientWrapperMainTemplate string
+var wrapperMainTemplate string
 
 //go:embed templates/wrappers/game.go.tmpl
-var goClientWrapperGameTemplate string
+var wrapperGameTemplate string
 
 //go:embed templates/wrappers/events.go.tmpl
-var goClientWrapperEventsTemplate string
+var wrapperEventsTemplate string
 
 func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, generateWrappers bool) error {
 	module, err := cli.Input("Project module path:")
@@ -77,16 +77,6 @@ func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, ge
 
 	cli.Finish()
 
-	cli.Begin("Organizing imports...")
-
-	if !util.IsInstalled("goimports") {
-		cli.Warn("Failed to organize import statements: 'goimports' is not installed!")
-		return nil
-	}
-	util.Execute(true, "goimports", "-w", "main.go")
-
-	cli.Finish()
-
 	return nil
 }
 
@@ -127,7 +117,7 @@ func execGoClientMainTemplate(projectName, serverURL, libraryURL string) error {
 		LibraryURL string
 	}
 
-	return new.ExecTemplate(goClientMainTemplate, "main.go", data{
+	return new.ExecTemplate(mainTemplate, "main.go", data{
 		URL:        serverURL,
 		LibraryURL: libraryURL,
 	})
@@ -168,17 +158,17 @@ func execGoClientWrappersTemplate(projectName, modulePath, gameName, serverURL, 
 		Events:      events,
 	}
 
-	err := new.ExecTemplate(goClientWrapperMainTemplate, filepath.Join("main.go"), data)
+	err := new.ExecTemplate(wrapperMainTemplate, filepath.Join("main.go"), data)
 	if err != nil {
 		return err
 	}
 
-	err = new.ExecTemplate(goClientWrapperGameTemplate, filepath.Join(gameDir, "game.go"), data)
+	err = new.ExecTemplate(wrapperGameTemplate, filepath.Join(gameDir, "game.go"), data)
 	if err != nil {
 		return err
 	}
 
-	err = new.ExecTemplate(goClientWrapperEventsTemplate, filepath.Join(gameDir, "events.go"), data)
+	err = new.ExecTemplate(wrapperEventsTemplate, filepath.Join(gameDir, "events.go"), data)
 	if err != nil {
 		return err
 	}
