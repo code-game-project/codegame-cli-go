@@ -10,7 +10,9 @@ import (
 
 	"github.com/Bananenpro/cli"
 	"github.com/code-game-project/codegame-cli-go/new"
-	"github.com/code-game-project/codegame-cli/util"
+	"github.com/code-game-project/codegame-cli/util/cggenevents"
+	"github.com/code-game-project/codegame-cli/util/exec"
+	"github.com/code-game-project/codegame-cli/util/external"
 )
 
 //go:embed templates/main.go.tmpl
@@ -31,18 +33,18 @@ func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, ge
 		return err
 	}
 
-	_, err = util.Execute(true, "go", "mod", "init", module)
+	_, err = exec.Execute(true, "go", "mod", "init", module)
 	if err != nil {
 		return err
 	}
 
-	libraryURL, libraryTag, err := getGoClientLibraryURL(libraryVersion)
+	libraryURL, libraryTag, err := getClientLibraryURL(libraryVersion)
 	if err != nil {
 		return err
 	}
 
 	cli.BeginLoading("Installing go-client...")
-	_, err = util.Execute(true, "go", "get", fmt.Sprintf("%s@%s", libraryURL, libraryTag))
+	_, err = exec.Execute(true, "go", "get", fmt.Sprintf("%s@%s", libraryURL, libraryTag))
 	if err != nil {
 		return err
 	}
@@ -50,54 +52,44 @@ func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, ge
 
 	var eventNames []string
 	if generateWrappers {
-		cgeVersion, err := util.GetCGEVersion(baseURL(serverURL, isSSL(serverURL)))
+		cgeVersion, err := cggenevents.GetCGEVersion(baseURL(serverURL, isSSL(serverURL)))
 		if err != nil {
 			return err
 		}
 
-		eventNames, err = util.GetEventNames(baseURL(serverURL, isSSL(serverURL)), cgeVersion)
+		eventNames, err = cggenevents.GetEventNames(baseURL(serverURL, isSSL(serverURL)), cgeVersion)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = createGoClientTemplate(projectName, module, gameName, serverURL, libraryURL, generateWrappers, eventNames)
+	err = createClientTemplate(projectName, module, gameName, serverURL, libraryURL, generateWrappers, eventNames)
 	if err != nil {
 		return err
 	}
 
 	cli.BeginLoading("Installing dependencies...")
 
-	_, err = util.Execute(true, "go", "mod", "tidy")
+	_, err = exec.Execute(true, "go", "mod", "tidy")
 	if err != nil {
 		return err
 	}
 
 	cli.FinishLoading()
-
 	return nil
 }
 
-func createGoClientTemplate(projectName, modulePath, gameName, serverURL, libraryURL string, wrappers bool, eventNames []string) error {
+func createClientTemplate(projectName, modulePath, gameName, serverURL, libraryURL string, wrappers bool, eventNames []string) error {
 	if !wrappers {
-		return execGoClientMainTemplate(projectName, serverURL, libraryURL)
+		return execClientMainTemplate(projectName, serverURL, libraryURL)
 	}
 
-	return execGoClientWrappersTemplate(projectName, modulePath, gameName, serverURL, libraryURL, eventNames)
+	return execClientWrappersTemplate(projectName, modulePath, gameName, serverURL, libraryURL, eventNames)
 }
 
-func getGoClientLibraryURL(clientVersion string) (url string, tag string, err error) {
-	if clientVersion == "latest" {
-		var err error
-		clientVersion, err = util.LatestGithubTag("code-game-project", "go-client")
-		if err != nil {
-			return "", "", err
-		}
-		clientVersion = strings.TrimPrefix(strings.Join(strings.Split(clientVersion, ".")[:2], "."), "v")
-	}
-
+func getClientLibraryURL(clientVersion string) (url string, tag string, err error) {
 	majorVersion := strings.Split(clientVersion, ".")[0]
-	tag, err = util.GithubTagFromVersion("code-game-project", "go-client", clientVersion)
+	tag, err = external.GithubTagFromVersion("code-game-project", "go-client", clientVersion)
 	if err != nil {
 		return "", "", err
 	}
@@ -109,7 +101,7 @@ func getGoClientLibraryURL(clientVersion string) (url string, tag string, err er
 	return path, tag, nil
 }
 
-func execGoClientMainTemplate(projectName, serverURL, libraryURL string) error {
+func execClientMainTemplate(projectName, serverURL, libraryURL string) error {
 	type data struct {
 		URL        string
 		LibraryURL string
@@ -121,7 +113,7 @@ func execGoClientMainTemplate(projectName, serverURL, libraryURL string) error {
 	})
 }
 
-func execGoClientWrappersTemplate(projectName, modulePath, gameName, serverURL, libraryURL string, eventNames []string) error {
+func execClientWrappersTemplate(projectName, modulePath, gameName, serverURL, libraryURL string, eventNames []string) error {
 	gamePackageName := strings.ReplaceAll(strings.ReplaceAll(gameName, "-", ""), "_", "")
 
 	gameDir := strings.ReplaceAll(strings.ReplaceAll(gameName, "-", ""), "_", "")

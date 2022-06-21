@@ -9,7 +9,8 @@ import (
 
 	"github.com/Bananenpro/cli"
 	"github.com/code-game-project/codegame-cli-go/new"
-	"github.com/code-game-project/codegame-cli/util"
+	"github.com/code-game-project/codegame-cli/util/exec"
+	"github.com/code-game-project/codegame-cli/util/external"
 )
 
 //go:embed templates/main.go.tmpl
@@ -33,7 +34,7 @@ func CreateNewServer(projectName, libraryVersion string) error {
 		return err
 	}
 
-	_, err = util.Execute(true, "go", "mod", "init", module)
+	_, err = exec.Execute(true, "go", "mod", "init", module)
 	if err != nil {
 		return err
 	}
@@ -44,7 +45,7 @@ func CreateNewServer(projectName, libraryVersion string) error {
 		return err
 	}
 
-	_, err = util.Execute(true, "go", "get", fmt.Sprintf("%s@%s", libraryURL, libraryTag))
+	_, err = exec.Execute(true, "go", "get", fmt.Sprintf("%s@%s", libraryURL, libraryTag))
 	if err != nil {
 		return err
 	}
@@ -57,13 +58,12 @@ func CreateNewServer(projectName, libraryVersion string) error {
 
 	cli.BeginLoading("Installing dependencies...")
 
-	_, err = util.Execute(true, "go", "mod", "tidy")
+	_, err = exec.Execute(true, "go", "mod", "tidy")
 	if err != nil {
 		return err
 	}
 
 	cli.FinishLoading()
-
 	return nil
 }
 
@@ -112,7 +112,7 @@ func executeTemplate(templateText, fileName, projectName, libraryURL, modulePath
 func getLibraryURL(serverVersion string) (url string, tag string, err error) {
 	if serverVersion == "latest" {
 		var err error
-		serverVersion, err = util.LatestGithubTag("code-game-project", "go-server")
+		serverVersion, err = external.LatestGithubTag("code-game-project", "go-server")
 		if err != nil {
 			return "", "", err
 		}
@@ -120,7 +120,7 @@ func getLibraryURL(serverVersion string) (url string, tag string, err error) {
 	}
 
 	majorVersion := strings.Split(serverVersion, ".")[0]
-	tag, err = util.GithubTagFromVersion("code-game-project", "go-server", serverVersion)
+	tag, err = external.GithubTagFromVersion("code-game-project", "go-server", serverVersion)
 	if err != nil {
 		return "", "", err
 	}
