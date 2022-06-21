@@ -1,0 +1,6 @@
+func init() {
+	URL = "{{.URL}}"
+	if os.Getenv("CG_GAME_URL") != "" {
+		URL = os.Getenv("CG_GAME_URL")
+	}
+}
