@@ -3,6 +3,7 @@ module github.com/code-game-project/codegame-cli-go
 go 1.18
 
 require (
+	github.com/Bananenpro/cli v0.1.2
 	github.com/code-game-project/codegame-cli v0.5.2
 	github.com/spf13/pflag v1.0.5
 )

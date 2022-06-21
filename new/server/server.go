@@ -7,8 +7,8 @@ import (
 
 	_ "embed"
 
+	"github.com/Bananenpro/cli"
 	"github.com/code-game-project/codegame-cli-go/new"
-	"github.com/code-game-project/codegame-cli/cli"
 	"github.com/code-game-project/codegame-cli/util"
 )
 
@@ -38,7 +38,7 @@ func CreateNewServer(projectName, libraryVersion string) error {
 		return err
 	}
 
-	cli.Begin("Installing correct go-server version...")
+	cli.BeginLoading("Installing go-server...")
 	libraryURL, libraryTag, err := getLibraryURL(libraryVersion)
 	if err != nil {
 		return err
@@ -48,23 +48,21 @@ func CreateNewServer(projectName, libraryVersion string) error {
 	if err != nil {
 		return err
 	}
-	cli.Finish()
+	cli.FinishLoading()
 
-	cli.Begin("Creating project template...")
 	err = createTemplate(projectName, module, libraryURL)
 	if err != nil {
 		return err
 	}
-	cli.Finish()
 
-	cli.Begin("Installing dependencies...")
+	cli.BeginLoading("Installing dependencies...")
 
 	_, err = util.Execute(true, "go", "mod", "tidy")
 	if err != nil {
 		return err
 	}
 
-	cli.Finish()
+	cli.FinishLoading()
 
 	return nil
 }

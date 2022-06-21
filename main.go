@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/Bananenpro/cli"
 	"github.com/code-game-project/codegame-cli-go/new/client"
 	"github.com/code-game-project/codegame-cli-go/new/server"
-	"github.com/code-game-project/codegame-cli/cli"
 	"github.com/spf13/pflag"
 )
 

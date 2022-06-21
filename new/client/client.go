@@ -8,8 +8,8 @@ import (
 
 	_ "embed"
 
+	"github.com/Bananenpro/cli"
 	"github.com/code-game-project/codegame-cli-go/new"
-	"github.com/code-game-project/codegame-cli/cli"
 	"github.com/code-game-project/codegame-cli/util"
 )
 
@@ -41,12 +41,12 @@ func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, ge
 		return err
 	}
 
-	cli.Begin("Installing correct go-client version...")
+	cli.BeginLoading("Installing go-client...")
 	_, err = util.Execute(true, "go", "get", fmt.Sprintf("%s@%s", libraryURL, libraryTag))
 	if err != nil {
 		return err
 	}
-	cli.Finish()
+	cli.FinishLoading()
 
 	var eventNames []string
 	if generateWrappers {
@@ -61,21 +61,19 @@ func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, ge
 		}
 	}
 
-	cli.Begin("Creating project template...")
 	err = createGoClientTemplate(projectName, module, gameName, serverURL, libraryURL, generateWrappers, eventNames)
 	if err != nil {
 		return err
 	}
-	cli.Finish()
 
-	cli.Begin("Installing dependencies...")
+	cli.BeginLoading("Installing dependencies...")
 
 	_, err = util.Execute(true, "go", "mod", "tidy")
 	if err != nil {
 		return err
 	}
 
-	cli.Finish()
+	cli.FinishLoading()
 
 	return nil
 }
