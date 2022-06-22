@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/Bananenpro/cli"
@@ -45,6 +46,10 @@ func getOutputName(projectRoot, output string) (string, error) {
 	}
 	if output == "" {
 		output = filepath.Base(absRoot)
+	}
+
+	if runtime.GOOS == "windows" {
+		output += ".exe"
 	}
 
 	if stat, err := os.Stat(output); err == nil && stat.IsDir() {
