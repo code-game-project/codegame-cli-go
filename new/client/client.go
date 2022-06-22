@@ -27,12 +27,6 @@ var wrapperGameTemplate string
 //go:embed templates/wrappers/events.go.tmpl
 var wrapperEventsTemplate string
 
-//go:embed templates/wrappers/game.go.init-dev.tmpl
-var wrapperGameInitDevTemplate string
-
-//go:embed templates/wrappers/game.go.init-build.tmpl
-var wrapperGameInitBuildTemplate string
-
 func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, generateWrappers bool) error {
 	module, err := cli.Input("Project module path:")
 	if err != nil {
@@ -146,14 +140,12 @@ func execClientWrappersTemplate(projectName, modulePath, gameName, serverURL, li
 		PackageName string
 		ModulePath  string
 		Events      []event
-		InitFunc    string
 	}{
 		URL:         serverURL,
 		LibraryURL:  libraryURL,
 		PackageName: gamePackageName,
 		ModulePath:  modulePath,
 		Events:      events,
-		InitFunc:    wrapperGameInitDevTemplate,
 	}
 
 	err := new.ExecTemplate(wrapperMainTemplate, filepath.Join("main.go"), data)

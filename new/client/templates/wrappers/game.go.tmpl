@@ -19,7 +19,12 @@ import (
 
 var URL string
 
-{{.InitFunc}}
+func init() {
+	url := os.Getenv("CG_GAME_URL")
+	if url != "" {
+		URL = url
+	}
+}
 
 type Game struct {
 	Id         string
