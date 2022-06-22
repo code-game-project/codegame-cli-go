@@ -1,7 +1,6 @@
 package build
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/Bananenpro/cli"
+	"github.com/code-game-project/codegame-cli-go/util"
 	cgExec "github.com/code-game-project/codegame-cli/util/exec"
 )
 
@@ -17,7 +17,7 @@ func BuildClient(projectRoot, gameName, output, url string) error {
 	if err != nil {
 		return err
 	}
-	packageName, err := getPackageName(projectRoot)
+	packageName, err := util.GetModuleName(projectRoot)
 	if err != nil {
 		return err
 	}
@@ -57,23 +57,4 @@ func getOutputName(projectRoot, output string) (string, error) {
 	}
 
 	return output, nil
-}
-
-func getPackageName(projectRoot string) (string, error) {
-	path := filepath.Join(projectRoot, "go.mod")
-	file, err := os.Open(path)
-	if err != nil {
-		return "", cli.Error("Failed to open '%s'", path)
-	}
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		if strings.HasPrefix(scanner.Text(), "module ") {
-			return strings.TrimSuffix(strings.TrimPrefix(scanner.Text(), "module "), "/"), nil
-		}
-	}
-	if scanner.Err() != nil {
-		cli.Error("Failed to read '%s': %s", path, scanner.Err())
-	}
-	return "", cli.Error("Missing 'module' statement in '%s'", path)
 }

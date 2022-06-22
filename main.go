@@ -20,6 +20,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Usage: %s <command> [...]\n", os.Args[0])
 		fmt.Fprintln(os.Stderr, "\nCommands:")
 		fmt.Fprintln(os.Stderr, "\tnew \tCreate a new project.")
+		fmt.Fprintln(os.Stderr, "\tupdate \tUpdate the current project.")
 		fmt.Fprintln(os.Stderr, "\trun \tRun the current project.")
 		fmt.Fprintln(os.Stderr, "\tbuild \tBuild the current project.")
 		fmt.Fprintln(os.Stderr, "\nOptions:")
@@ -43,6 +44,8 @@ func main() {
 	switch command {
 	case "new":
 		err = newProject(projectName)
+	case "update":
+		err = updateProject()
 	case "run":
 		err = runProject()
 	case "build":
@@ -71,7 +74,7 @@ func newProject(projectName string) error {
 	flagSet.StringVar(&libraryVersion, "library-version", "latest", "The version of the Go library to use, e.g. 0.8")
 
 	flagSet.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s run [...]\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Usage: %s new <client|server>\n", os.Args[0])
 		fmt.Fprintln(os.Stderr, "\nOptions:")
 		flagSet.PrintDefaults()
 	}
@@ -91,6 +94,36 @@ func newProject(projectName string) error {
 		err = server.CreateNewServer(projectName, libraryVersion)
 	default:
 		err = cli.Error("Unknown project type: %s\n", projectType)
+	}
+
+	return err
+}
+
+func updateProject() error {
+	flagSet := pflag.NewFlagSet("new", pflag.ExitOnError)
+
+	var libraryVersion string
+	flagSet.StringVar(&libraryVersion, "library-version", "latest", "The version of the Go library to use, e.g. 0.8")
+
+	flagSet.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s update\n", os.Args[0])
+		fmt.Fprintln(os.Stderr, "\nOptions:")
+		flagSet.PrintDefaults()
+	}
+	flagSet.Parse(os.Args[2:])
+
+	config, err := cgfile.LoadCodeGameFile("")
+	if err != nil {
+		return err
+	}
+
+	switch config.Type {
+	case "client":
+		err = client.Update(libraryVersion, config)
+	case "server":
+		err = server.Update(libraryVersion)
+	default:
+		err = cli.Error("Unknown project type: %s\n", config.Type)
 	}
 
 	return err
@@ -149,6 +182,7 @@ func buildProject() error {
 	flagSet.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s build [...]\n", os.Args[0])
 		fmt.Fprintln(os.Stderr, "\nOptions:")
+		fmt.Fprintf(os.Stderr, "`update` must be executed at the root of the project.")
 		flagSet.PrintDefaults()
 	}
 	flagSet.Parse(os.Args[2:])

@@ -3,6 +3,7 @@ package client
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -10,6 +11,8 @@ import (
 
 	"github.com/Bananenpro/cli"
 	"github.com/code-game-project/codegame-cli-go/new"
+	"github.com/code-game-project/codegame-cli-go/util"
+	"github.com/code-game-project/codegame-cli/util/cgfile"
 	"github.com/code-game-project/codegame-cli/util/cggenevents"
 	"github.com/code-game-project/codegame-cli/util/exec"
 	"github.com/code-game-project/codegame-cli/util/external"
@@ -63,7 +66,7 @@ func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, ge
 		}
 	}
 
-	err = createClientTemplate(projectName, module, gameName, serverURL, libraryURL, generateWrappers, eventNames)
+	err = createClientTemplate(module, gameName, serverURL, libraryURL, generateWrappers, eventNames)
 	if err != nil {
 		return err
 	}
@@ -79,12 +82,62 @@ func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, ge
 	return nil
 }
 
-func createClientTemplate(projectName, modulePath, gameName, serverURL, libraryURL string, wrappers bool, eventNames []string) error {
-	if !wrappers {
-		return execClientMainTemplate(projectName, serverURL, libraryURL)
+func Update(libraryVersion string, config *cgfile.CodeGameFileData) error {
+	libraryURL, libraryTag, err := getClientLibraryURL(libraryVersion)
+	if err != nil {
+		return err
 	}
 
-	return execClientWrappersTemplate(projectName, modulePath, gameName, serverURL, libraryURL, eventNames)
+	url := baseURL(config.URL, isSSL(config.URL))
+
+	var eventNames []string
+	cgeVersion, err := cggenevents.GetCGEVersion(url)
+	if err != nil {
+		return err
+	}
+
+	eventNames, err = cggenevents.GetEventNames(url, cgeVersion)
+	if err != nil {
+		return err
+	}
+
+	module, err := util.GetModuleName("")
+	if err != nil {
+		return err
+	}
+
+	err = updateClientTemplate(module, config.Game, config.URL, libraryURL, eventNames)
+	if err != nil {
+		return err
+	}
+
+	cli.BeginLoading("Updating dependencies...")
+	_, err = exec.Execute(true, "go", "get", "-u", "./...")
+	if err != nil {
+		return err
+	}
+	_, err = exec.Execute(true, "go", "get", fmt.Sprintf("%s@%s", libraryURL, libraryTag))
+	if err != nil {
+		return err
+	}
+	_, err = exec.Execute(true, "go", "mod", "tidy")
+	if err != nil {
+		return err
+	}
+	cli.FinishLoading()
+	return nil
+}
+
+func createClientTemplate(modulePath, gameName, serverURL, libraryURL string, wrappers bool, eventNames []string) error {
+	if !wrappers {
+		return execClientMainTemplate(serverURL, libraryURL)
+	}
+
+	return execClientWrappersTemplate(modulePath, gameName, serverURL, libraryURL, eventNames, false)
+}
+
+func updateClientTemplate(modulePath, gameName, serverURL, libraryURL string, eventNames []string) error {
+	return execClientWrappersTemplate(modulePath, gameName, serverURL, libraryURL, eventNames, true)
 }
 
 func getClientLibraryURL(clientVersion string) (url string, tag string, err error) {
@@ -101,7 +154,7 @@ func getClientLibraryURL(clientVersion string) (url string, tag string, err erro
 	return path, tag, nil
 }
 
-func execClientMainTemplate(projectName, serverURL, libraryURL string) error {
+func execClientMainTemplate(serverURL, libraryURL string) error {
 	type data struct {
 		URL        string
 		LibraryURL string
@@ -113,10 +166,20 @@ func execClientMainTemplate(projectName, serverURL, libraryURL string) error {
 	})
 }
 
-func execClientWrappersTemplate(projectName, modulePath, gameName, serverURL, libraryURL string, eventNames []string) error {
+func execClientWrappersTemplate(modulePath, gameName, serverURL, libraryURL string, eventNames []string, update bool) error {
 	gamePackageName := strings.ReplaceAll(strings.ReplaceAll(gameName, "-", ""), "_", "")
-
 	gameDir := strings.ReplaceAll(strings.ReplaceAll(gameName, "-", ""), "_", "")
+
+	if update {
+		cli.Warn("This action will ERASE and regenerate ALL files in '%s/'.\nYou will have to manually update your code to work with the new version.", gameDir)
+		ok, err := cli.YesNo("Continue?", false)
+		if err != nil || !ok {
+			return cli.ErrCanceled
+		}
+		os.RemoveAll(gameDir)
+	} else {
+		cli.Warn("DO NOT EDIT the `%s/` directory. ALL CHANGES WILL BE LOST when running `codegame update`.", gameDir)
+	}
 
 	type event struct {
 		Name       string
@@ -148,12 +211,14 @@ func execClientWrappersTemplate(projectName, modulePath, gameName, serverURL, li
 		Events:      events,
 	}
 
-	err := new.ExecTemplate(wrapperMainTemplate, filepath.Join("main.go"), data)
-	if err != nil {
-		return err
+	if !update {
+		err := new.ExecTemplate(wrapperMainTemplate, filepath.Join("main.go"), data)
+		if err != nil {
+			return err
+		}
 	}
 
-	err = new.ExecTemplate(wrapperGameTemplate, filepath.Join(gameDir, "game.go"), data)
+	err := new.ExecTemplate(wrapperGameTemplate, filepath.Join(gameDir, "game.go"), data)
 	if err != nil {
 		return err
 	}

@@ -67,6 +67,24 @@ func CreateNewServer(projectName, libraryVersion string) error {
 	return nil
 }
 
+func Update(libraryVersion string) error {
+	cli.Warn("This update might include breaking changes. You will have to manually update your code to work with the new version.")
+	ok, err := cli.YesNo("Continue?", false)
+	if err != nil || !ok {
+		return cli.ErrCanceled
+	}
+
+	cli.BeginLoading("Updating dependencies...")
+
+	_, err = exec.Execute(true, "go", "get", "-u", "./...")
+	if err != nil {
+		return err
+	}
+
+	cli.FinishLoading()
+	return nil
+}
+
 func createTemplate(projectName, module, libraryURL string) error {
 	err := executeTemplate(mainTemplate, "main.go", projectName, libraryURL, module)
 	if err != nil {
