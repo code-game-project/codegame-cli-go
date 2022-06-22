@@ -178,7 +178,7 @@ func execClientWrappersTemplate(modulePath, gameName, serverURL, libraryURL stri
 		}
 		os.RemoveAll(gameDir)
 	} else {
-		cli.Warn("DO NOT EDIT the `%s/` directory. ALL CHANGES WILL BE LOST when running `codegame update`.", gameDir)
+		cli.Warn("DO NOT EDIT the `%s/` directory inside of the project. ALL CHANGES WILL BE LOST when running `codegame update`.", gameDir)
 	}
 
 	type event struct {
