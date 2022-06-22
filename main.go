@@ -7,34 +7,25 @@ import (
 	"strings"
 
 	"github.com/Bananenpro/cli"
+	"github.com/Bananenpro/pflag"
 	"github.com/code-game-project/codegame-cli-go/new/client"
 	"github.com/code-game-project/codegame-cli-go/new/server"
-	"github.com/spf13/pflag"
+	"github.com/code-game-project/codegame-cli-go/run"
+	"github.com/code-game-project/codegame-cli/util/cgfile"
 )
 
 func main() {
-	var gameName string
-	pflag.StringVar(&gameName, "game-name", "", "The name of the game. (required for clients)")
-
-	var url string
-	pflag.StringVar(&url, "url", "", "The URL of the game. (required for clients)")
-
-	var generateWrappers bool
-	pflag.BoolVar(&generateWrappers, "generate-wrappers", false, "Whether to generate helper functions.")
-
-	var libraryVersion string
-	pflag.StringVar(&libraryVersion, "library-version", "latest", "The version of the Go library to use, e.g. 0.8")
-
 	pflag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s <command> [...]\n", os.Args[0])
 		fmt.Fprintln(os.Stderr, "\nCommands:")
 		fmt.Fprintln(os.Stderr, "\tnew \tCreate a new project.")
+		fmt.Fprintln(os.Stderr, "\trun \tRun the current project.")
 		fmt.Fprintln(os.Stderr, "\nOptions:")
 		pflag.PrintDefaults()
+		fmt.Fprintln(os.Stderr, "This program expects to be executed inside of the project directory.")
 	}
 
-	pflag.Parse()
-	if pflag.NArg() < 2 {
+	if len(os.Args) < 2 {
 		pflag.Usage()
 		os.Exit(1)
 	}
@@ -45,11 +36,13 @@ func main() {
 	}
 	projectName := filepath.Base(workingDir)
 
-	command := strings.ToLower(pflag.Arg(0))
+	command := strings.ToLower(os.Args[1])
 
 	switch command {
 	case "new":
-		err = new(projectName, gameName, url, libraryVersion, generateWrappers)
+		err = newProject(projectName)
+	case "run":
+		err = runProject()
 	default:
 		err = cli.Error("Unknown command: %s\n", command)
 	}
@@ -58,8 +51,33 @@ func main() {
 	}
 }
 
-func new(projectName, gameName, url, libraryVersion string, generateWrappers bool) error {
-	projectType := strings.ToLower(pflag.Arg(1))
+func newProject(projectName string) error {
+	flagSet := pflag.NewFlagSet("new", pflag.ExitOnError)
+
+	var gameName string
+	flagSet.StringVar(&gameName, "game-name", "", "The name of the game. (required for `new client`)")
+
+	var url string
+	flagSet.StringVar(&url, "url", "", "The URL of the game. (required for `new client`)")
+
+	var generateWrappers bool
+	flagSet.BoolVar(&generateWrappers, "generate-wrappers", false, "Whether to generate helper functions. (used by `new client`)")
+
+	var libraryVersion string
+	flagSet.StringVar(&libraryVersion, "library-version", "latest", "The version of the Go library to use, e.g. 0.8")
+
+	flagSet.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s run [...]\n", os.Args[0])
+		fmt.Fprintln(os.Stderr, "\nOptions:")
+		flagSet.PrintDefaults()
+	}
+	flagSet.Parse(os.Args[2:])
+
+	if flagSet.NArg() == 0 {
+		flagSet.Usage()
+		os.Exit(1)
+	}
+	projectType := flagSet.Arg(0)
 
 	var err error
 	switch projectType {
@@ -69,6 +87,50 @@ func new(projectName, gameName, url, libraryVersion string, generateWrappers boo
 		err = server.CreateNewServer(projectName, libraryVersion)
 	default:
 		err = cli.Error("Unknown project type: %s\n", projectType)
+	}
+
+	return err
+}
+
+func runProject() error {
+	flagSet := pflag.NewFlagSet("run", pflag.ExitOnError)
+	flagSet.ParseErrorsWhitelist = pflag.ParseErrorsWhitelist{
+		UnknownFlags:           true,
+		PassUnknownFlagsToArgs: true,
+	}
+
+	var overrideURL string
+	flagSet.StringVar(&overrideURL, "override-url", "", "The URL of the game. (required for `new client`)")
+
+	flagSet.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s run [...]\n", os.Args[0])
+		fmt.Fprintln(os.Stderr, "\nOptions:")
+		flagSet.PrintDefaults()
+	}
+	flagSet.Parse(os.Args[2:])
+
+	projectRoot, err := cgfile.FindProjectRootRelative()
+	if err != nil {
+		return err
+	}
+
+	data, err := cgfile.LoadCodeGameFile(projectRoot)
+	if err != nil {
+		return err
+	}
+
+	url := data.URL
+	if overrideURL != "" {
+		url = overrideURL
+	}
+
+	switch data.Type {
+	case "client":
+		err = run.RunClient(projectRoot, url, flagSet.Args()...)
+	case "server":
+		err = run.RunServer(projectRoot, flagSet.Args()...)
+	default:
+		err = cli.Error("Unknown project type: %s\n", data.Type)
 	}
 
 	return err
