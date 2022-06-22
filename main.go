@@ -8,6 +8,7 @@ import (
 
 	"github.com/Bananenpro/cli"
 	"github.com/Bananenpro/pflag"
+	"github.com/code-game-project/codegame-cli-go/build"
 	"github.com/code-game-project/codegame-cli-go/new/client"
 	"github.com/code-game-project/codegame-cli-go/new/server"
 	"github.com/code-game-project/codegame-cli-go/run"
@@ -20,6 +21,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, "\nCommands:")
 		fmt.Fprintln(os.Stderr, "\tnew \tCreate a new project.")
 		fmt.Fprintln(os.Stderr, "\trun \tRun the current project.")
+		fmt.Fprintln(os.Stderr, "\tbuild \tBuild the current project.")
 		fmt.Fprintln(os.Stderr, "\nOptions:")
 		pflag.PrintDefaults()
 		fmt.Fprintln(os.Stderr, "This program expects to be executed inside of the project directory.")
@@ -43,6 +45,8 @@ func main() {
 		err = newProject(projectName)
 	case "run":
 		err = runProject()
+	case "build":
+		err = buildProject()
 	default:
 		err = cli.Error("Unknown command: %s\n", command)
 	}
@@ -129,6 +133,41 @@ func runProject() error {
 		err = run.RunClient(projectRoot, url, flagSet.Args()...)
 	case "server":
 		err = run.RunServer(projectRoot, flagSet.Args()...)
+	default:
+		err = cli.Error("Unknown project type: %s\n", data.Type)
+	}
+
+	return err
+}
+
+func buildProject() error {
+	flagSet := pflag.NewFlagSet("build", pflag.ExitOnError)
+
+	var output string
+	flagSet.StringVarP(&output, "output", "o", "", "The name of the output file.")
+
+	flagSet.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s build [...]\n", os.Args[0])
+		fmt.Fprintln(os.Stderr, "\nOptions:")
+		flagSet.PrintDefaults()
+	}
+	flagSet.Parse(os.Args[2:])
+
+	projectRoot, err := cgfile.FindProjectRootRelative()
+	if err != nil {
+		return err
+	}
+
+	data, err := cgfile.LoadCodeGameFile(projectRoot)
+	if err != nil {
+		return err
+	}
+
+	switch data.Type {
+	case "client":
+		err = build.BuildClient(projectRoot, data.Game, output, data.URL)
+	case "server":
+		err = build.BuildServer(projectRoot, output)
 	default:
 		err = cli.Error("Unknown project type: %s\n", data.Type)
 	}
