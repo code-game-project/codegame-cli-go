@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"{{.ModulePath}}/{{.PackageName}}"
 	"log"
+	"{{.ModulePath}}/{{.PackageName}}"
 
 	"{{.LibraryURL}}"
 )
@@ -15,7 +15,7 @@ func main() {
 	}
 	fmt.Println("Game ID:", game.Id)
 
-	game.OnCGErrorEvent(func(origin {{.PackageName}}.Player, data cg.ErrorEventData) {
+	game.OnCGError(func(origin {{.PackageName}}.Player, data cg.ErrorEventData) {
 		fmt.Println("error:", data.Message)
 	})
 

@@ -1,19 +1,18 @@
-package util
+package main
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/Bananenpro/cli"
 )
 
-func GetModuleName(projectRoot string) (string, error) {
+func GetGoModuleName(projectRoot string) (string, error) {
 	path := filepath.Join(projectRoot, "go.mod")
 	file, err := os.Open(path)
 	if err != nil {
-		return "", cli.Error("Failed to open '%s'", path)
+		return "", fmt.Errorf("Failed to open '%s'", path)
 	}
 
 	scanner := bufio.NewScanner(file)
@@ -23,7 +22,7 @@ func GetModuleName(projectRoot string) (string, error) {
 		}
 	}
 	if scanner.Err() != nil {
-		cli.Error("Failed to read '%s': %s", path, scanner.Err())
+		return "", fmt.Errorf("Failed to read '%s': %s", path, scanner.Err())
 	}
-	return "", cli.Error("Missing 'module' statement in '%s'", path)
+	return "", fmt.Errorf("Missing 'module' statement in '%s'", path)
 }

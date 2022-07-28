@@ -19,19 +19,19 @@ func NewGame(cgGame *cg.Game) *Game {
 
 func (g *Game) Run() {
 	for g.cg.Running() {
-		event, ok := g.cg.WaitForNextEvent()
+		cmd, ok := g.cg.WaitForNextCommand()
 		if !ok {
 			break
 		}
-		g.handleEvent(event.Player, event.Event)
+		g.handleEvent(cmd.Origin, cmd.Cmd)
 	}
 }
 
-func (g *Game) handleEvent(player *cg.Player, event cg.Event) {
-	switch event.Name {
+func (g *Game) handleCommand(origin *cg.Player, cmd cg.Command) {
+	switch cmd.Name {
 	default:
-		player.Send(player.Id, cg.ErrorEvent, cg.ErrorEventData{
-			Message: fmt.Sprintf("unexpected event: %s", event.Name),
+		player.Send(cg.ErrorEvent, cg.ErrorEventData{
+			Message: fmt.Sprintf("unexpected command: %s", cmd.Name),
 		})
 	}
 }
