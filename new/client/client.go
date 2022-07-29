@@ -21,16 +21,13 @@ import (
 //go:embed templates/main.go.tmpl
 var mainTemplate string
 
-//go:embed templates/wrappers/main.go.tmpl
-var wrapperMainTemplate string
+//go:embed templates/game.go.tmpl
+var gameTemplate string
 
-//go:embed templates/wrappers/game.go.tmpl
-var wrapperGameTemplate string
+//go:embed templates/events.go.tmpl
+var eventsTemplate string
 
-//go:embed templates/wrappers/events.go.tmpl
-var wrapperEventsTemplate string
-
-func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, generateWrappers bool) error {
+func CreateNewClient(projectName, gameName, serverURL, libraryVersion string) error {
 	module, err := cli.Input("Project module path:")
 	if err != nil {
 		return err
@@ -53,20 +50,17 @@ func CreateNewClient(projectName, gameName, serverURL, libraryVersion string, ge
 	}
 	cli.FinishLoading()
 
-	var eventNames []string
-	if generateWrappers {
-		cgeVersion, err := cggenevents.GetCGEVersion(baseURL(serverURL, isSSL(serverURL)))
-		if err != nil {
-			return err
-		}
-
-		eventNames, err = cggenevents.GetEventNames(baseURL(serverURL, isSSL(serverURL)), cgeVersion)
-		if err != nil {
-			return err
-		}
+	cgeVersion, err := cggenevents.GetCGEVersion(baseURL(serverURL, isSSL(serverURL)))
+	if err != nil {
+		return err
 	}
 
-	err = createClientTemplate(module, gameName, serverURL, libraryURL, generateWrappers, eventNames)
+	eventNames, err := cggenevents.GetEventNames(baseURL(serverURL, isSSL(serverURL)), cgeVersion)
+	if err != nil {
+		return err
+	}
+
+	err = createClientTemplate(module, gameName, serverURL, libraryURL, eventNames)
 	if err != nil {
 		return err
 	}
@@ -128,16 +122,12 @@ func Update(libraryVersion string, config *cgfile.CodeGameFileData) error {
 	return nil
 }
 
-func createClientTemplate(modulePath, gameName, serverURL, libraryURL string, wrappers bool, eventNames []string) error {
-	if !wrappers {
-		return execClientMainTemplate(serverURL, libraryURL)
-	}
-
-	return execClientWrappersTemplate(modulePath, gameName, serverURL, libraryURL, eventNames, false)
+func createClientTemplate(modulePath, gameName, serverURL, libraryURL string, eventNames []string) error {
+	return execClientTemplate(modulePath, gameName, serverURL, libraryURL, eventNames, false)
 }
 
 func updateClientTemplate(modulePath, gameName, serverURL, libraryURL string, eventNames []string) error {
-	return execClientWrappersTemplate(modulePath, gameName, serverURL, libraryURL, eventNames, true)
+	return execClientTemplate(modulePath, gameName, serverURL, libraryURL, eventNames, true)
 }
 
 func getClientLibraryURL(clientVersion string) (url string, tag string, err error) {
@@ -154,19 +144,7 @@ func getClientLibraryURL(clientVersion string) (url string, tag string, err erro
 	return path, tag, nil
 }
 
-func execClientMainTemplate(serverURL, libraryURL string) error {
-	type data struct {
-		URL        string
-		LibraryURL string
-	}
-
-	return new.ExecTemplate(mainTemplate, "main.go", data{
-		URL:        serverURL,
-		LibraryURL: libraryURL,
-	})
-}
-
-func execClientWrappersTemplate(modulePath, gameName, serverURL, libraryURL string, eventNames []string, update bool) error {
+func execClientTemplate(modulePath, gameName, serverURL, libraryURL string, eventNames []string, update bool) error {
 	gamePackageName := strings.ReplaceAll(strings.ReplaceAll(gameName, "-", ""), "_", "")
 	gameDir := strings.ReplaceAll(strings.ReplaceAll(gameName, "-", ""), "_", "")
 
@@ -212,18 +190,18 @@ func execClientWrappersTemplate(modulePath, gameName, serverURL, libraryURL stri
 	}
 
 	if !update {
-		err := new.ExecTemplate(wrapperMainTemplate, filepath.Join("main.go"), data)
+		err := new.ExecTemplate(mainTemplate, filepath.Join("main.go"), data)
 		if err != nil {
 			return err
 		}
 	}
 
-	err := new.ExecTemplate(wrapperGameTemplate, filepath.Join(gameDir, "game.go"), data)
+	err := new.ExecTemplate(gameTemplate, filepath.Join(gameDir, "game.go"), data)
 	if err != nil {
 		return err
 	}
 
-	err = new.ExecTemplate(wrapperEventsTemplate, filepath.Join(gameDir, "events.go"), data)
+	err = new.ExecTemplate(eventsTemplate, filepath.Join(gameDir, "events.go"), data)
 	if err != nil {
 		return err
 	}

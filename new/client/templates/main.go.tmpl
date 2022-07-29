@@ -1,14 +1,25 @@
 package main
 
 import (
+	"fmt"
+	"{{.ModulePath}}/{{.PackageName}}"
 	"log"
 
 	"{{.LibraryURL}}"
 )
 
 func main() {
-	socket, err := cg.NewSocket("{{.URL}}")
+	game, err := {{.PackageName}}.Init()
 	if err != nil {
-		log.Fatalf("failed to connect to server: %s", err)
+		log.Fatal(err)
 	}
+	fmt.Println("Game ID:", game.Id)
+
+	game.OnCGErrorEvent(func(origin {{.PackageName}}.Player, data cg.ErrorEventData) {
+		fmt.Println("error:", data.Message)
+	})
+
+	// TODO: register event listeners
+
+	game.Run()
 }

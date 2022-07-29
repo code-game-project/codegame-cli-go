@@ -67,9 +67,6 @@ func newProject(projectName string) error {
 	var url string
 	flagSet.StringVar(&url, "url", "", "The URL of the game. (required for `new client`)")
 
-	var generateWrappers bool
-	flagSet.BoolVar(&generateWrappers, "generate-wrappers", false, "Whether to generate helper functions. (used by `new client`)")
-
 	var libraryVersion string
 	flagSet.StringVar(&libraryVersion, "library-version", "latest", "The version of the Go library to use, e.g. 0.8")
 
@@ -89,7 +86,7 @@ func newProject(projectName string) error {
 	var err error
 	switch projectType {
 	case "client":
-		err = client.CreateNewClient(projectName, gameName, url, libraryVersion, generateWrappers)
+		err = client.CreateNewClient(projectName, gameName, url, libraryVersion)
 	case "server":
 		err = server.CreateNewServer(projectName, libraryVersion)
 	default:
