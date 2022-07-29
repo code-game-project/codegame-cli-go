@@ -9,8 +9,9 @@ import (
 
 	"github.com/Bananenpro/cli"
 	"github.com/code-game-project/codegame-cli-go/new"
-	"github.com/code-game-project/codegame-cli/util/exec"
-	"github.com/code-game-project/codegame-cli/util/external"
+	"github.com/code-game-project/codegame-cli/pkg/exec"
+	"github.com/code-game-project/codegame-cli/pkg/external"
+	"github.com/code-game-project/codegame-cli/pkg/modules"
 )
 
 //go:embed templates/main.go.tmpl
@@ -28,7 +29,12 @@ var dockerfileTemplate string
 //go:embed templates/dockerignore.tmpl
 var dockerignoreTemplate string
 
-func CreateNewServer(projectName, libraryVersion string) error {
+func CreateNewServer(projectName string) error {
+	data, err := modules.ReadCommandConfig[modules.NewServerData]()
+	if err != nil {
+		return err
+	}
+
 	module, err := cli.Input("Project module path:")
 	if err != nil {
 		return err
@@ -40,7 +46,7 @@ func CreateNewServer(projectName, libraryVersion string) error {
 	}
 
 	cli.BeginLoading("Installing go-server...")
-	libraryURL, libraryTag, err := getLibraryURL(libraryVersion)
+	libraryURL, libraryTag, err := getLibraryURL(data.LibraryVersion)
 	if err != nil {
 		return err
 	}
@@ -67,7 +73,7 @@ func CreateNewServer(projectName, libraryVersion string) error {
 	return nil
 }
 
-func Update(libraryVersion string) error {
+func Update() error {
 	cli.Warn("This update might include breaking changes. You will have to manually update your code to work with the new version.")
 	ok, err := cli.YesNo("Continue?", false)
 	if err != nil || !ok {

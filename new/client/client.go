@@ -2,7 +2,6 @@ package client
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,10 +11,12 @@ import (
 	"github.com/Bananenpro/cli"
 	"github.com/code-game-project/codegame-cli-go/new"
 	"github.com/code-game-project/codegame-cli-go/util"
-	"github.com/code-game-project/codegame-cli/util/cgfile"
-	"github.com/code-game-project/codegame-cli/util/cggenevents"
-	"github.com/code-game-project/codegame-cli/util/exec"
-	"github.com/code-game-project/codegame-cli/util/external"
+	"github.com/code-game-project/codegame-cli/pkg/cgfile"
+	"github.com/code-game-project/codegame-cli/pkg/cggenevents"
+	"github.com/code-game-project/codegame-cli/pkg/exec"
+	"github.com/code-game-project/codegame-cli/pkg/external"
+	"github.com/code-game-project/codegame-cli/pkg/modules"
+	"github.com/code-game-project/codegame-cli/pkg/server"
 )
 
 //go:embed templates/main.go.tmpl
@@ -27,7 +28,18 @@ var gameTemplate string
 //go:embed templates/events.go.tmpl
 var eventsTemplate string
 
-func CreateNewClient(projectName, gameName, serverURL, libraryVersion string) error {
+func CreateNewClient(projectName string) error {
+	data, err := modules.ReadCommandConfig[modules.NewClientData]()
+	if err != nil {
+		return err
+	}
+	data.URL = external.TrimURL(data.URL)
+
+	api, err := server.NewAPI(data.URL)
+	if err != nil {
+		return err
+	}
+
 	module, err := cli.Input("Project module path:")
 	if err != nil {
 		return err
@@ -38,7 +50,7 @@ func CreateNewClient(projectName, gameName, serverURL, libraryVersion string) er
 		return err
 	}
 
-	libraryURL, libraryTag, err := getClientLibraryURL(libraryVersion)
+	libraryURL, libraryTag, err := getClientLibraryURL(data.LibraryVersion)
 	if err != nil {
 		return err
 	}
@@ -50,17 +62,22 @@ func CreateNewClient(projectName, gameName, serverURL, libraryVersion string) er
 	}
 	cli.FinishLoading()
 
-	cgeVersion, err := cggenevents.GetCGEVersion(baseURL(serverURL, isSSL(serverURL)))
+	cge, err := api.GetCGEFile()
 	if err != nil {
 		return err
 	}
 
-	eventNames, err := cggenevents.GetEventNames(baseURL(serverURL, isSSL(serverURL)), cgeVersion)
+	cgeVersion, err := cggenevents.ParseCGEVersion(cge)
 	if err != nil {
 		return err
 	}
 
-	err = createClientTemplate(module, gameName, serverURL, libraryURL, eventNames)
+	eventNames, _, err := cggenevents.GetEventNames(external.BaseURL("http", external.IsTLS(data.URL), data.URL), cgeVersion)
+	if err != nil {
+		return err
+	}
+
+	err = createClientTemplate(module, data.Name, data.URL, libraryURL, eventNames)
 	if err != nil {
 		return err
 	}
@@ -76,26 +93,40 @@ func CreateNewClient(projectName, gameName, serverURL, libraryVersion string) er
 	return nil
 }
 
-func Update(libraryVersion string, config *cgfile.CodeGameFileData) error {
-	libraryURL, libraryTag, err := getClientLibraryURL(libraryVersion)
+func Update(config *cgfile.CodeGameFileData) error {
+	data, err := modules.ReadCommandConfig[modules.NewServerData]()
 	if err != nil {
 		return err
 	}
 
-	url := baseURL(config.URL, isSSL(config.URL))
-
-	var eventNames []string
-	cgeVersion, err := cggenevents.GetCGEVersion(url)
+	api, err := server.NewAPI(config.URL)
 	if err != nil {
 		return err
 	}
 
-	eventNames, err = cggenevents.GetEventNames(url, cgeVersion)
+	libraryURL, libraryTag, err := getClientLibraryURL(data.LibraryVersion)
 	if err != nil {
 		return err
 	}
 
-	module, err := util.GetModuleName("")
+	url := external.BaseURL("http", external.IsTLS(config.URL), config.URL)
+
+	cge, err := api.GetCGEFile()
+	if err != nil {
+		return err
+	}
+
+	cgeVersion, err := cggenevents.ParseCGEVersion(cge)
+	if err != nil {
+		return err
+	}
+
+	eventNames, _, err := cggenevents.GetEventNames(url, cgeVersion)
+	if err != nil {
+		return err
+	}
+
+	module, err := util.GetModuleName()
 	if err != nil {
 		return err
 	}
@@ -207,21 +238,4 @@ func execClientTemplate(modulePath, gameName, serverURL, libraryURL string, even
 	}
 
 	return nil
-}
-
-func baseURL(domain string, ssl bool) string {
-	if ssl {
-		return "https://" + domain
-	} else {
-		return "http://" + domain
-	}
-}
-
-func isSSL(domain string) bool {
-	res, err := http.Get("https://" + domain)
-	if err == nil {
-		res.Body.Close()
-		return true
-	}
-	return false
 }

@@ -3,14 +3,13 @@ package util
 import (
 	"bufio"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/Bananenpro/cli"
 )
 
-func GetModuleName(projectRoot string) (string, error) {
-	path := filepath.Join(projectRoot, "go.mod")
+func GetModuleName() (string, error) {
+	path := "go.mod"
 	file, err := os.Open(path)
 	if err != nil {
 		return "", cli.Error("Failed to open '%s'", path)

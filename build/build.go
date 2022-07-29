@@ -9,38 +9,47 @@ import (
 
 	"github.com/Bananenpro/cli"
 	"github.com/code-game-project/codegame-cli-go/util"
-	cgExec "github.com/code-game-project/codegame-cli/util/exec"
+	cgExec "github.com/code-game-project/codegame-cli/pkg/exec"
+	"github.com/code-game-project/codegame-cli/pkg/modules"
 )
 
-func BuildClient(projectRoot, gameName, output, url string) error {
-	out, err := getOutputName(projectRoot, output)
+func BuildClient(gameName, url string) error {
+	data, err := modules.ReadCommandConfig[modules.BuildData]()
 	if err != nil {
 		return err
 	}
-	packageName, err := util.GetModuleName(projectRoot)
+	out, err := getOutputName(data.Output)
+	if err != nil {
+		return err
+	}
+	packageName, err := util.GetModuleName()
 	if err != nil {
 		return err
 	}
 	gamePackageName := strings.ReplaceAll(strings.ReplaceAll(gameName, "-", ""), "_", "")
 
-	cmdArgs := []string{"build", "-o", out, "-ldflags", fmt.Sprintf("-X %s/%s.URL=%s", packageName, gamePackageName, url), filepath.Join(projectRoot, "main.go")}
+	cmdArgs := []string{"build", "-o", out, "-ldflags", fmt.Sprintf("-X %s/%s.URL=%s", packageName, gamePackageName, url)}
 
 	_, err = cgExec.Execute(false, "go", cmdArgs...)
 	return err
 }
 
-func BuildServer(projectRoot, output string) error {
-	out, err := getOutputName(projectRoot, output)
+func BuildServer() error {
+	data, err := modules.ReadCommandConfig[modules.BuildData]()
 	if err != nil {
 		return err
 	}
-	cmdArgs := []string{"build", "-o", out, filepath.Join(projectRoot, "main.go")}
+	out, err := getOutputName(data.Output)
+	if err != nil {
+		return err
+	}
+	cmdArgs := []string{"build", "-o", out}
 	_, err = cgExec.Execute(false, "go", cmdArgs...)
 	return err
 }
 
-func getOutputName(projectRoot, output string) (string, error) {
-	absRoot, err := filepath.Abs(projectRoot)
+func getOutputName(output string) (string, error) {
+	absRoot, err := filepath.Abs(".")
 	if err != nil {
 		return "", err
 	}

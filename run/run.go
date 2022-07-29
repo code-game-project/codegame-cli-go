@@ -3,15 +3,14 @@ package run
 import (
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 
 	"github.com/Bananenpro/cli"
-	cgExec "github.com/code-game-project/codegame-cli/util/exec"
+	cgExec "github.com/code-game-project/codegame-cli/pkg/exec"
 )
 
-func RunClient(projectRoot, url string, args ...string) error {
-	cmdArgs := []string{"run", filepath.Join(projectRoot, "main.go")}
+func RunClient(url string, args ...string) error {
+	cmdArgs := []string{"run", "."}
 	cmdArgs = append(cmdArgs, args...)
 
 	env := []string{"CG_GAME_URL=" + url}
@@ -35,8 +34,8 @@ func RunClient(projectRoot, url string, args ...string) error {
 	return nil
 }
 
-func RunServer(projectRoot string, args ...string) error {
-	cmdArgs := []string{"run", filepath.Join(projectRoot, "main.go")}
+func RunServer(args ...string) error {
+	cmdArgs := []string{"run", "."}
 	cmdArgs = append(cmdArgs, args...)
 	_, err := cgExec.Execute(false, "go", cmdArgs...)
 	return err
