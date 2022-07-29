@@ -14,7 +14,7 @@ import (
 	"strings"
 
 	"github.com/code-game-project/go-client/cg"
-	"github.com/Bananenpro/pflag"
+	"github.com/spf13/pflag"
 )
 
 var URL string
@@ -53,7 +53,7 @@ type Player struct {
 //         --spectate  Spectate the created/joined game. The username is not neccessary if this flag is set.
 //
 // This function calls pflag.Parse() internally. If you want to add your own flags, you will need to register them with pflag *before* calling this function.
-func Init() (*Game, error) {
+func Init(config GameConfig) (*Game, error) {
 	pflag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "USAGE: %s [OPTIONS] <operation>\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "\nOperations:\n")
@@ -87,9 +87,9 @@ func Init() (*Game, error) {
 	switch operation {
 	case "create":
 		if spectate {
-			game, err = CreateAndSpectateGame(public)
+			game, err = CreateAndSpectateGame(public, config)
 		} else {
-			game, err = CreateAndJoinGame(public, pflag.Arg(1))
+			game, err = CreateAndJoinGame(public, pflag.Arg(1), config)
 		}
 	case "join":
 		if (!spectate && pflag.NArg() < 3) || (spectate && pflag.NArg() < 2) {
@@ -117,13 +117,13 @@ func Init() (*Game, error) {
 }
 
 // CreateAndJoinGame creates a new game and joins it immediately after.
-func CreateAndJoinGame(public bool, username string) (*Game, error) {
+func CreateAndJoinGame(public bool, username string, config GameConfig) (*Game, error) {
 	socket, err := cg.NewSocket(URL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to server: %s", err)
 	}
 
-	gameId, err := socket.Create(public)
+	gameId, err := socket.Create(public, config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create game: %s", err)
 	}
@@ -140,13 +140,13 @@ func CreateAndJoinGame(public bool, username string) (*Game, error) {
 }
 
 // CreateAndSpectateGame creates a new game and spectates it immediately after.
-func CreateAndSpectateGame(public bool) (*Game, error) {
+func CreateAndSpectateGame(public bool, config GameConfig) (*Game, error) {
 	socket, err := cg.NewSocket(URL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to server: %s", err)
 	}
 
-	gameId, err := socket.Create(public)
+	gameId, err := socket.Create(public, config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create game: %s", err)
 	}

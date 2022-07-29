@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 	"strconv"
 	"time"
@@ -37,7 +38,7 @@ func main() {
 		KickInactivePlayerDelay: 24 * time.Hour,
 	})
 
-	server.Run(func(cgGame *cg.Game) {
+	server.Run(func(cgGame *cg.Game, config json.RawMessage) {
 	    {{.PackageName}}.NewGame(cgGame).Run()
 	})
 }
