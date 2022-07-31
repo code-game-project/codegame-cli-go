@@ -3,11 +3,9 @@ module github.com/code-game-project/codegame-cli-go
 go 1.18
 
 require (
-	github.com/Bananenpro/cli v0.1.5
-	github.com/code-game-project/codegame-cli v0.6.0
+	github.com/Bananenpro/cli v0.2.1
+	github.com/code-game-project/go-utils v0.1.0
 )
-
-replace github.com/code-game-project/codegame-cli => /home/julian/Dokumente/Code/CodeGame/codegame-cli
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.5 // indirect
@@ -19,4 +17,5 @@ require (
 	golang.org/x/sys v0.0.0-20220727055044-e65921a090b8 // indirect
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
 	golang.org/x/text v0.3.7 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )

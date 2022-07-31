@@ -9,11 +9,11 @@ import (
 	_ "embed"
 
 	"github.com/Bananenpro/cli"
-	"github.com/code-game-project/codegame-cli/pkg/cggenevents"
-	"github.com/code-game-project/codegame-cli/pkg/exec"
-	"github.com/code-game-project/codegame-cli/pkg/external"
-	"github.com/code-game-project/codegame-cli/pkg/modules"
-	"github.com/code-game-project/codegame-cli/pkg/server"
+	"github.com/code-game-project/go-utils/cggenevents"
+	"github.com/code-game-project/go-utils/exec"
+	"github.com/code-game-project/go-utils/external"
+	"github.com/code-game-project/go-utils/modules"
+	"github.com/code-game-project/go-utils/server"
 )
 
 //go:embed templates/new/client/main.go.tmpl

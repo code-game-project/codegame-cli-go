@@ -6,11 +6,11 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/code-game-project/codegame-cli/pkg/cgfile"
-	"github.com/code-game-project/codegame-cli/pkg/external"
-	"github.com/code-game-project/codegame-cli/pkg/modules"
+	"github.com/code-game-project/go-utils/cgfile"
+	"github.com/code-game-project/go-utils/external"
+	"github.com/code-game-project/go-utils/modules"
 
-	cgExec "github.com/code-game-project/codegame-cli/pkg/exec"
+	cgExec "github.com/code-game-project/go-utils/exec"
 )
 
 func Run() error {

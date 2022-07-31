@@ -7,9 +7,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/code-game-project/codegame-cli/pkg/cgfile"
-	cgExec "github.com/code-game-project/codegame-cli/pkg/exec"
-	"github.com/code-game-project/codegame-cli/pkg/modules"
+	"github.com/code-game-project/go-utils/cgfile"
+	cgExec "github.com/code-game-project/go-utils/exec"
+	"github.com/code-game-project/go-utils/modules"
 )
 
 func Build() error {
