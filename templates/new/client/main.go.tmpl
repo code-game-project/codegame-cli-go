@@ -15,10 +15,6 @@ func main() {
 	}
 	fmt.Println("Game ID:", game.Id)
 
-	game.OnCGError(func(origin {{.PackageName}}.Player, data cg.ErrorEventData) {
-		fmt.Println("error:", data.Message)
-	})
-
 	// TODO: register event listeners
 
 	game.Run()
