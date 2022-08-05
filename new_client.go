@@ -31,9 +31,7 @@ func CreateNewClient(projectName string) error {
 		return err
 	}
 
-	url := external.TrimURL(data.URL)
-	baseURL := external.BaseURL("http", external.IsTLS(url), url)
-	api, err := server.NewAPI(baseURL)
+	api, err := server.NewAPI(data.URL)
 	if err != nil {
 		return err
 	}
@@ -69,12 +67,12 @@ func CreateNewClient(projectName string) error {
 		return err
 	}
 
-	eventNames, commandNames, err := cggenevents.GetEventNames(baseURL, cgeVersion)
+	eventNames, commandNames, err := cggenevents.GetEventNames(api.BaseURL(), cgeVersion)
 	if err != nil {
 		return err
 	}
 
-	err = createClientTemplate(module, data.Name, url, libraryURL, eventNames, commandNames)
+	err = createClientTemplate(module, data.Name, libraryURL, eventNames, commandNames)
 	if err != nil {
 		return err
 	}
@@ -90,8 +88,8 @@ func CreateNewClient(projectName string) error {
 	return nil
 }
 
-func createClientTemplate(modulePath, gameName, serverURL, libraryURL string, eventNames, commandNames []string) error {
-	return execClientTemplate(modulePath, gameName, serverURL, libraryURL, eventNames, commandNames, false)
+func createClientTemplate(modulePath, gameName, libraryURL string, eventNames, commandNames []string) error {
+	return execClientTemplate(modulePath, gameName, libraryURL, eventNames, commandNames, false)
 }
 
 func getClientLibraryURL(clientVersion string) (url string, tag string, err error) {
@@ -108,7 +106,7 @@ func getClientLibraryURL(clientVersion string) (url string, tag string, err erro
 	return path, tag, nil
 }
 
-func execClientTemplate(modulePath, gameName, serverURL, libraryURL string, eventNames, commandNames []string, update bool) error {
+func execClientTemplate(modulePath, gameName, libraryURL string, eventNames, commandNames []string, update bool) error {
 	gamePackageName := strings.ReplaceAll(strings.ReplaceAll(gameName, "-", ""), "_", "")
 	gameDir := strings.ReplaceAll(strings.ReplaceAll(gameName, "-", ""), "_", "")
 
@@ -151,14 +149,12 @@ func execClientTemplate(modulePath, gameName, serverURL, libraryURL string, even
 	}
 
 	data := struct {
-		URL         string
 		LibraryURL  string
 		PackageName string
 		ModulePath  string
 		Events      []event
 		Commands    []event
 	}{
-		URL:         serverURL,
 		LibraryURL:  libraryURL,
 		PackageName: gamePackageName,
 		ModulePath:  modulePath,
@@ -167,7 +163,7 @@ func execClientTemplate(modulePath, gameName, serverURL, libraryURL string, even
 	}
 
 	if !update {
-		err := ExecTemplate(clientMainTemplate, filepath.Join("main.go"), data)
+		err := ExecTemplate(clientMainTemplate, "main.go", data)
 		if err != nil {
 			return err
 		}

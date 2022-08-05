@@ -1,19 +1,15 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"{{.ModulePath}}/{{.PackageName}}"
-
-	"{{.LibraryURL}}"
 )
 
 func main() {
-	game, err := {{.PackageName}}.Init()
+	game, err := {{.PackageName}}.Init({{.PackageName}}.GameConfig{})
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Game ID:", game.Id)
 
 	// TODO: register event listeners
 

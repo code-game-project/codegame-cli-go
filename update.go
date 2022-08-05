@@ -7,7 +7,6 @@ import (
 	"github.com/code-game-project/go-utils/cgfile"
 	"github.com/code-game-project/go-utils/cggenevents"
 	"github.com/code-game-project/go-utils/exec"
-	"github.com/code-game-project/go-utils/external"
 	"github.com/code-game-project/go-utils/modules"
 	"github.com/code-game-project/go-utils/server"
 )
@@ -33,8 +32,7 @@ func Update() error {
 }
 
 func updateClient(libraryVersion string, config *cgfile.CodeGameFileData) error {
-	baseURL := external.BaseURL("http", external.IsTLS(config.URL), config.URL)
-	api, err := server.NewAPI(baseURL)
+	api, err := server.NewAPI(config.URL)
 	libraryURL, libraryTag, err := getClientLibraryURL(libraryVersion)
 	if err != nil {
 		return err
@@ -59,7 +57,7 @@ func updateClient(libraryVersion string, config *cgfile.CodeGameFileData) error 
 		return err
 	}
 
-	err = updateClientTemplate(module, config.Game, config.URL, libraryURL, eventNames, commandNames)
+	err = updateClientTemplate(module, config.Game, libraryURL, eventNames, commandNames)
 	if err != nil {
 		return err
 	}
@@ -81,8 +79,8 @@ func updateClient(libraryVersion string, config *cgfile.CodeGameFileData) error 
 	return nil
 }
 
-func updateClientTemplate(modulePath, gameName, serverURL, libraryURL string, eventNames, commandNames []string) error {
-	return execClientTemplate(modulePath, gameName, serverURL, libraryURL, eventNames, commandNames, true)
+func updateClientTemplate(modulePath, gameName, libraryURL string, eventNames, commandNames []string) error {
+	return execClientTemplate(modulePath, gameName, libraryURL, eventNames, commandNames, true)
 }
 
 func updateServer(libraryVersion string) error {
