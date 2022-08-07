@@ -39,6 +39,10 @@ func main() {
 	})
 
 	server.Run(func(cgGame *cg.Game, config json.RawMessage) {
-	    {{.PackageName}}.NewGame(cgGame).Run()
+		var gameConfig {{.PackageName}}.GameConfig
+		err := json.Unmarshal(config, &gameConfig)
+		cgGame.SetConfig(gameConfig)
+
+	    {{.PackageName}}.NewGame(cgGame, gameConfig).Run()
 	})
 }

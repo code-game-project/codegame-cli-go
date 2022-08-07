@@ -8,11 +8,13 @@ import (
 
 type Game struct {
 	cg     *cg.Game
+	config GameConfig
 }
 
-func NewGame(cgGame *cg.Game) *Game {
+func NewGame(cgGame *cg.Game, config GameConfig) *Game {
 	game := &Game{
 		cg:     cgGame,
+		config: config,
 	}
 	return game
 }
