@@ -13,7 +13,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/code-game-project/go-client/cg"
+	"{{.LibraryURL}}"
 	"github.com/spf13/pflag"
 )
 
@@ -28,6 +28,7 @@ func init() {
 
 type Game struct {
 	Id         string
+	Config     GameConfig
 	socket     *cg.Socket
 	spectating bool
 }
@@ -147,6 +148,7 @@ func CreateAndJoinGame(public, protected bool, username string, config GameConfi
 
 	return &Game{
 		Id:     gameId,
+		Config: config,
 		socket: socket,
 	}, joinSecret, nil
 }
@@ -170,6 +172,7 @@ func CreateAndSpectateGame(public, protected bool, config GameConfig) (*Game, st
 
 	return &Game{
 		Id:     gameId,
+		Config: config,
 		socket: socket,
 	}, joinSecret, nil
 }
@@ -187,8 +190,14 @@ func JoinGame(gameId, username, joinSecret string) (*Game, error) {
 		return nil, fmt.Errorf("failed to join game: %s", err)
 	}
 
+	config, err := cg.FetchGameConfig[GameConfig](socket, gameId)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Game{
 		Id:     gameId,
+		Config: config,
 		socket: socket,
 	}, nil
 }
@@ -205,8 +214,14 @@ func ReconnectGame(username string) (*Game, error) {
 		return nil, fmt.Errorf("failed to reconnect: %s", err)
 	}
 
+	config, err := cg.FetchGameConfig[GameConfig](socket, socket.Session().GameId)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Game{
 		Id:     socket.Session().GameId,
+		Config: config,
 		socket: socket,
 	}, nil
 }
@@ -222,9 +237,15 @@ func SpectateGame(gameId string) (*Game, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to spectate game: %s", err)
 	}
+	
+	config, err := cg.FetchGameConfig[GameConfig](socket, gameId)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Game{
 		Id:     socket.Session().GameId,
+		Config: config,
 		socket: socket,
 	}, nil
 }
