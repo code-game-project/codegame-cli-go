@@ -25,15 +25,13 @@ func (g *Game) Run() {
 		if !ok {
 			break
 		}
-		g.handleEvent(cmd.Origin, cmd.Cmd)
+		g.handleCommand(cmd.Origin, cmd.Cmd)
 	}
 }
 
 func (g *Game) handleCommand(origin *cg.Player, cmd cg.Command) {
 	switch cmd.Name {
 	default:
-		player.Send(cg.ErrorEvent, cg.ErrorEventData{
-			Message: fmt.Sprintf("unexpected command: %s", cmd.Name),
-		})
+		origin.Log.ErrorData(cmd, fmt.Sprintf("unexpected command: %s", cmd.Name))
 	}
 }

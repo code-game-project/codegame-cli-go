@@ -41,7 +41,11 @@ func main() {
 	server.Run(func(cgGame *cg.Game, config json.RawMessage) {
 		var gameConfig {{.PackageName}}.GameConfig
 		err := json.Unmarshal(config, &gameConfig)
-		cgGame.SetConfig(gameConfig)
+		if err == nil {
+			cgGame.SetConfig(gameConfig)
+		} else {
+			cgGame.Log.Error("Failed to unmarshal game config: %s", err)
+		}
 
 	    {{.PackageName}}.NewGame(cgGame, gameConfig).Run()
 	})
