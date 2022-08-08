@@ -28,7 +28,7 @@ func main() {
 		}
 		switch os.Args[2] {
 		case "client":
-			err = CreateNewClient(projectName)
+			err = CreateNewClient()
 		case "server":
 			err = CreateNewServer(projectName)
 		default:

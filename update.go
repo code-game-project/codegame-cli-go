@@ -33,6 +33,9 @@ func Update() error {
 
 func updateClient(libraryVersion string, config *cgfile.CodeGameFileData) error {
 	api, err := server.NewAPI(config.URL)
+	if err != nil {
+		return err
+	}
 	libraryURL, libraryTag, err := getClientLibraryURL(libraryVersion)
 	if err != nil {
 		return err
@@ -47,7 +50,7 @@ func updateClient(libraryVersion string, config *cgfile.CodeGameFileData) error 
 		return err
 	}
 
-	eventNames, commandNames, err := cggenevents.GetEventNames(config.URL, cgeVersion)
+	eventNames, commandNames, err := cggenevents.GetEventNames(api.BaseURL(), cgeVersion)
 	if err != nil {
 		return err
 	}

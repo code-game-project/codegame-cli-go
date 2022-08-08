@@ -25,7 +25,7 @@ var clientGameTemplate string
 //go:embed templates/new/client/events.go.tmpl
 var clientEventsTemplate string
 
-func CreateNewClient(projectName string) error {
+func CreateNewClient() error {
 	data, err := modules.ReadCommandConfig[modules.NewClientData]()
 	if err != nil {
 		return err
