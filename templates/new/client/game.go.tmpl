@@ -96,7 +96,9 @@ func Init(config GameConfig) (*Game, error) {
 		} else {
 			game, joinSecret, err = CreateAndJoinGame(public, protected, pflag.Arg(1), config)
 		}
-		fmt.Println("Game ID:", game.Id)
+		if game != nil {
+			fmt.Println("Game ID:", game.Id)
+		}
 		if joinSecret != "" {
 			fmt.Println("Join secret:", joinSecret)
 		}
