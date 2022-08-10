@@ -148,6 +148,11 @@ func CreateAndJoinGame(public, protected bool, username string, config GameConfi
 		return nil, "", fmt.Errorf("failed to join game: %s", err)
 	}
 
+	config, err = cg.FetchGameConfig[GameConfig](socket, gameId)
+	if err != nil {
+		return nil, "", err
+	}
+
 	return &Game{
 		Id:     gameId,
 		Config: config,
@@ -170,6 +175,11 @@ func CreateAndSpectateGame(public, protected bool, config GameConfig) (*Game, st
 	err = socket.Spectate(gameId)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to spectate game: %s", err)
+	}
+
+	config, err = cg.FetchGameConfig[GameConfig](socket, gameId)
+	if err != nil {
+		return nil, "", err
 	}
 
 	return &Game{
