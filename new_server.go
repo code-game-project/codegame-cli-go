@@ -75,6 +75,11 @@ func createServerTemplate(projectName, module, libraryURL string) error {
 		return err
 	}
 
+	err = executeServerTemplate(gitignoreTemplate, ".gitignore", projectName, libraryURL, module)
+	if err != nil {
+		return err
+	}
+
 	err = executeServerTemplate(serverDockerfileTemplate, "Dockerfile", projectName, libraryURL, module)
 	if err != nil {
 		return err
