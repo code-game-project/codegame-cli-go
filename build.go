@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
 
+	"github.com/Bananenpro/cli"
 	"github.com/code-game-project/go-utils/cgfile"
 	cgExec "github.com/code-game-project/go-utils/exec"
 	"github.com/code-game-project/go-utils/modules"
@@ -22,19 +24,26 @@ func Build() error {
 	if err != nil {
 		return err
 	}
+	data.OS = strings.ReplaceAll(data.OS, "current", "")
+	data.OS = strings.ReplaceAll(data.OS, "macos", "darwin")
+	data.Arch = strings.ReplaceAll(data.Arch, "current", "")
+	data.Arch = strings.ReplaceAll(data.Arch, "x86", "386")
+	data.Arch = strings.ReplaceAll(data.Arch, "x64", "amd64")
+	data.Arch = strings.ReplaceAll(data.Arch, "arm32", "arm")
 
 	switch config.Type {
 	case "client":
-		return buildClient(config.Game, data.Output, config.URL)
+		return buildClient(config.Game, data.Output, config.URL, data.OS, data.Arch)
 	case "server":
-		return buildServer(data.Output)
+		return buildServer(data.Output, data.OS, data.Arch)
 	default:
 		return fmt.Errorf("Unknown project type: %s", config.Type)
 	}
 }
 
-func buildClient(gameName, output, url string) error {
-	out, err := getOutputName(output, false)
+func buildClient(gameName, output, url, operatingSystem, architecture string) error {
+	cli.BeginLoading("Building...")
+	out, err := getOutputName(output, false, operatingSystem)
 	if err != nil {
 		return err
 	}
@@ -46,21 +55,47 @@ func buildClient(gameName, output, url string) error {
 
 	cmdArgs := []string{"build", "-o", out, "-ldflags", fmt.Sprintf("-X %s/%s.URL=%s", packageName, gamePackageName, url)}
 
-	_, err = cgExec.Execute(false, "go", cmdArgs...)
-	return err
+	if _, err = exec.LookPath("go"); err != nil {
+		return fmt.Errorf("'go' ist not installed!")
+	}
+
+	cmd := exec.Command("go", cmdArgs...)
+	cmd.Env = append(os.Environ(), "GOOS="+operatingSystem, "GOARCH="+architecture)
+
+	buildOutput, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println(string(buildOutput))
+		return fmt.Errorf("Failed to run 'GOOS=%s GOARCH=%s go %s'", operatingSystem, architecture, strings.Join(cmdArgs, " "))
+	}
+	cli.FinishLoading()
+	return nil
 }
 
-func buildServer(output string) error {
-	out, err := getOutputName(output, true)
+func buildServer(output, operatingSystem, architecture string) error {
+	cli.BeginLoading("Building...")
+	out, err := getOutputName(output, true, operatingSystem)
 	if err != nil {
 		return err
 	}
 	cmdArgs := []string{"build", "-o", out}
 	_, err = cgExec.Execute(false, "go", cmdArgs...)
-	return err
+
+	if _, err = exec.LookPath("go"); err != nil {
+		return fmt.Errorf("'go' ist not installed!")
+	}
+
+	cmd := exec.Command("go", cmdArgs...)
+	cmd.Env = append(os.Environ(), "GOOS="+operatingSystem, "GOARCH="+architecture)
+
+	err = cmd.Run()
+	if err != nil {
+		return fmt.Errorf("Failed to run 'GOOS=%s GOARCH=%s go %s'", operatingSystem, architecture, strings.Join(cmdArgs, " "))
+	}
+	cli.FinishLoading()
+	return nil
 }
 
-func getOutputName(output string, isServer bool) (string, error) {
+func getOutputName(output string, isServer bool, operatingSystem string) (string, error) {
 	absRoot, err := filepath.Abs(".")
 	if err != nil {
 		return "", err
@@ -72,7 +107,7 @@ func getOutputName(output string, isServer bool) (string, error) {
 		}
 	}
 
-	if runtime.GOOS == "windows" && !strings.HasSuffix(output, ".exe") {
+	if ((operatingSystem == "" && runtime.GOOS == "windows") || operatingSystem == "windows") && !strings.HasSuffix(output, ".exe") {
 		output += ".exe"
 	}
 
