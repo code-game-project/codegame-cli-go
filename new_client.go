@@ -96,6 +96,13 @@ func createClientTemplate(modulePath, gameName, libraryURL string, eventNames, c
 }
 
 func getClientLibraryURL(clientVersion string) (url string, tag string, err error) {
+	if clientVersion == "latest" {
+		clientVersion, err = external.LatestGithubTag("code-game-project", "go-client")
+		if err != nil {
+			return "", "", err
+		}
+		clientVersion = strings.TrimPrefix(strings.Join(strings.Split(clientVersion, ".")[:2], "."), "v")
+	}
 	majorVersion := strings.Split(clientVersion, ".")[0]
 	tag, err = external.GithubTagFromVersion("code-game-project", "go-client", clientVersion)
 	if err != nil {

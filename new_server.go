@@ -118,7 +118,6 @@ func executeServerTemplate(templateText, fileName, projectName, libraryURL, modu
 
 func getServerLibraryURL(serverVersion string) (url string, tag string, err error) {
 	if serverVersion == "latest" {
-		var err error
 		serverVersion, err = external.LatestGithubTag("code-game-project", "go-server")
 		if err != nil {
 			return "", "", err
