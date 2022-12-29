@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 
 	"github.com/code-game-project/go-utils/cgfile"
-	"github.com/code-game-project/go-utils/config"
 	"github.com/code-game-project/go-utils/external"
 	"github.com/code-game-project/go-utils/modules"
 
@@ -65,9 +63,6 @@ func runClient(url string, args []string) error {
 func runServer(args []string) error {
 	cmdArgs := []string{"run", "."}
 	cmdArgs = append(cmdArgs, args...)
-
-	conf := config.Load()
-	os.Setenv("CG_PORT", strconv.Itoa(conf.DevPort))
 
 	_, err := cgExec.Execute(false, "go", cmdArgs...)
 	return err
