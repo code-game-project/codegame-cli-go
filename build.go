@@ -103,7 +103,9 @@ func getOutputName(output string, isServer bool, operatingSystem string) (string
 	if output == "" {
 		output = filepath.Base(absRoot)
 		if isServer {
-			output += "-server"
+			if stat, err := os.Stat(output); err == nil && stat.IsDir() {
+				output += "-server"
+			}
 		}
 	}
 
