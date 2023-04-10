@@ -10,7 +10,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "USAGE: %s <command> [...]\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "USAGE: %s <action> [...]\n", os.Args[0])
 		os.Exit(1)
 	}
 
@@ -21,33 +21,17 @@ func main() {
 	projectName := filepath.Base(workingDir)
 
 	switch os.Args[1] {
-	case "new":
-		if len(os.Args) < 3 {
-			fmt.Fprintf(os.Stderr, "USAGE: %s new <client|server>\n", os.Args[0])
-			os.Exit(1)
-		}
-		switch os.Args[2] {
-		case "client":
-			err = CreateNewClient()
-		case "server":
-			err = CreateNewServer(projectName)
-		default:
-			fmt.Fprintln(os.Stderr, "Unknown project type:", os.Args[2])
-			os.Exit(1)
-		}
-	case "update":
-		err = Update()
-	case "run":
-		err = Run()
-	case "build":
-		err = Build()
+	case "info":
+		err = Info()
+	case "create":
+		err = Create(projectName)
 	default:
-		fmt.Fprintln(os.Stderr, "Unknown command:", os.Args[1])
+		fmt.Fprintln(os.Stderr, "unsupported action:", os.Args[1])
 		os.Exit(1)
 	}
 	if err != nil {
 		if err != cli.ErrCanceled {
-			cli.Error(err.Error())
+			fmt.Fprintln(os.Stderr, err.Error())
 		}
 		os.Exit(1)
 	}
