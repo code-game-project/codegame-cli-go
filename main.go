@@ -5,34 +5,33 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Bananenpro/cli"
+	"github.com/code-game-project/cli-module/module"
+	"github.com/code-game-project/cli-utils/feedback"
+	"github.com/code-game-project/cli-utils/modules"
+	"github.com/code-game-project/cli-utils/versions"
 )
 
-func main() {
-	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "USAGE: %s <action> [...]\n", os.Args[0])
-		os.Exit(1)
-	}
+var FeedbackPkg = feedback.Package("module-go")
 
+func main() {
 	workingDir, err := os.Getwd()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 	}
 	projectName := filepath.Base(workingDir)
 
-	switch os.Args[1] {
-	case "info":
-		err = Info()
-	case "create":
-		err = Create(projectName)
-	default:
-		fmt.Fprintln(os.Stderr, "unsupported action:", os.Args[1])
-		os.Exit(1)
-	}
-	if err != nil {
-		if err != cli.ErrCanceled {
-			fmt.Fprintln(os.Stderr, err.Error())
-		}
-		os.Exit(1)
-	}
+	module.Run("go", "Go", map[modules.ProjectType][]versions.Version{
+		modules.ProjectType_CLIENT: {versions.MustParse("0.9")},
+		modules.ProjectType_SERVER: {versions.MustParse("0.9")},
+	}, module.Config{
+		Create: func(data *modules.ActionCreateData) error {
+			switch data.ProjectType {
+			case modules.ProjectType_CLIENT:
+				return CreateClient(data, projectName)
+			case modules.ProjectType_SERVER:
+				return CreateServer(data, projectName)
+			}
+			return nil
+		},
+	}, feedback.SeverityInfo)
 }

@@ -6,6 +6,9 @@ import (
 	"strings"
 
 	_ "embed"
+
+	"github.com/code-game-project/cli-utils/modules"
+	"github.com/code-game-project/cli-utils/templates"
 )
 
 //go:embed templates/new/server/main.go.tmpl
@@ -23,7 +26,7 @@ var serverDockerfileTemplate string
 //go:embed templates/new/server/dockerignore.tmpl
 var serverDockerignoreTemplate string
 
-func CreateServer(projectName string) error {
+func CreateServer(data *modules.ActionCreateData, projectName string) error {
 	fmt.Println("create server")
 	return nil
 }
@@ -67,7 +70,7 @@ func executeServerTemplate(templateText, fileName, projectName, libraryURL, modu
 		ModulePath  string
 	}
 
-	return ExecTemplate(templateText, fileName, data{
+	return templates.Execute(templateText, fileName, data{
 		Name:        projectName,
 		PackageName: strings.ReplaceAll(strings.ReplaceAll(projectName, "_", ""), "-", ""),
 		LibraryURL:  libraryURL,

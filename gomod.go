@@ -12,7 +12,7 @@ func GetGoModuleName(projectRoot string) (string, error) {
 	path := filepath.Join(projectRoot, "go.mod")
 	file, err := os.Open(path)
 	if err != nil {
-		return "", fmt.Errorf("Failed to open '%s'", path)
+		return "", fmt.Errorf("open go.mod: %w", err)
 	}
 
 	scanner := bufio.NewScanner(file)
@@ -22,7 +22,7 @@ func GetGoModuleName(projectRoot string) (string, error) {
 		}
 	}
 	if scanner.Err() != nil {
-		return "", fmt.Errorf("Failed to read '%s': %s", path, scanner.Err())
+		return "", fmt.Errorf("read go.mod: %w", scanner.Err())
 	}
-	return "", fmt.Errorf("Missing 'module' statement in '%s'", path)
+	return "", fmt.Errorf("missing 'module' statement in '%s'", path)
 }
