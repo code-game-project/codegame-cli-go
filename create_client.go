@@ -49,11 +49,9 @@ func CreateClient(data *modules.ActionCreateData, projectName string) error {
 		return nil
 	})
 
-	out, err := exec.ExecuteHidden("go", "mod", "init", modulePath)
+	feedback.Info(FeedbackPkg, "Initializing Go module...")
+	err := exec.ExecuteDimmed("go", "mod", "init", modulePath)
 	if err != nil {
-		if out != "" {
-			fmt.Fprintln(os.Stderr, out)
-		}
 		return fmt.Errorf("create go module: %w", err)
 	}
 
@@ -63,7 +61,7 @@ func CreateClient(data *modules.ActionCreateData, projectName string) error {
 	}
 
 	feedback.Info(FeedbackPkg, "Installing go-client %s...", libraryTag)
-	err = exec.Execute("go", "get", fmt.Sprintf("%s@%s", libraryURL, libraryTag))
+	err = exec.ExecuteDimmed("go", "get", fmt.Sprintf("%s@%s", libraryURL, libraryTag))
 	if err != nil {
 		return fmt.Errorf("install go-client: %w", err)
 	}
@@ -81,7 +79,7 @@ func CreateClient(data *modules.ActionCreateData, projectName string) error {
 	}
 
 	feedback.Info(FeedbackPkg, "Installing dependencies...")
-	err = exec.Execute("go", "mod", "tidy")
+	err = exec.ExecuteDimmed("go", "mod", "tidy")
 	if err != nil {
 		return fmt.Errorf("install dependencies: %w", err)
 	}
