@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/code-game-project/cge-parser v0.0.0-20230413142902-7f6369a29beb
 	github.com/code-game-project/cli-module v0.0.0-20230413165653-7b78a9676547
-	github.com/code-game-project/cli-utils v0.0.0-20230414165041-62809b2117b1
+	github.com/code-game-project/cli-utils v0.0.0-20230415102921-d1864ac391e7
 	golang.org/x/mod v0.10.0
 )
 
@@ -21,7 +21,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
-	github.com/vbauerster/mpb/v8 v8.3.0 // indirect
+	github.com/vbauerster/mpb/v8 v8.4.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/term v0.7.0 // indirect
 	golang.org/x/text v0.9.0 // indirect

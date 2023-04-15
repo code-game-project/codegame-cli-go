@@ -24,14 +24,6 @@ func main() {
 		modules.ProjectType_CLIENT: {versions.MustParse("0.9")},
 		modules.ProjectType_SERVER: {versions.MustParse("0.9")},
 	}, module.Config{
-		Create: func(data *modules.ActionCreateData) error {
-			switch data.ProjectType {
-			case modules.ProjectType_CLIENT:
-				return CreateClient(data, projectName)
-			case modules.ProjectType_SERVER:
-				return CreateServer(data, projectName)
-			}
-			return nil
-		},
+		Create: create(projectName),
 	}, feedback.SeverityInfo)
 }

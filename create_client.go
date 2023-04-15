@@ -6,21 +6,16 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"time"
 
 	_ "embed"
 
 	"github.com/code-game-project/cge-parser/adapter"
 	"github.com/code-game-project/cli-module/module"
-	"github.com/code-game-project/cli-utils/casing"
 	"github.com/code-game-project/cli-utils/cli"
 	"github.com/code-game-project/cli-utils/exec"
 	"github.com/code-game-project/cli-utils/feedback"
 	"github.com/code-game-project/cli-utils/modules"
-	"github.com/code-game-project/cli-utils/request"
 	"github.com/code-game-project/cli-utils/templates"
-	"github.com/code-game-project/cli-utils/versions"
-	gomod "golang.org/x/mod/module"
 )
 
 //go:embed templates/new/client/main.go.tmpl
@@ -37,25 +32,8 @@ var gitignoreTemplate string
 
 var simpleModPathRegex = regexp.MustCompile("[a-z]+[a-z0-9]*")
 
-func CreateClient(data *modules.ActionCreateData, projectName string) error {
-	modulePath := cli.Input("Project module path:", true, casing.ToOneWord(projectName), func(input interface{}) error {
-		if simpleModPathRegex.Match([]byte(input.(string))) {
-			return nil
-		}
-		err := gomod.CheckPath(input.(string))
-		if err != nil {
-			return fmt.Errorf("invalid module path: %w", err.(*gomod.InvalidPathError).Err)
-		}
-		return nil
-	})
-
-	feedback.Info(FeedbackPkg, "Initializing Go module...")
-	err := exec.ExecuteDimmed("go", "mod", "init", modulePath)
-	if err != nil {
-		return fmt.Errorf("create go module: %w", err)
-	}
-
-	libraryURL, libraryTag, err := getClientLibraryURL(data.LibraryVersion)
+func CreateClient(data *modules.ActionCreateData, modulePath string) error {
+	libraryURL, libraryTag, err := getLibraryURL("go-client", data.LibraryVersion)
 	if err != nil {
 		return fmt.Errorf("determine client library details: %w", err)
 	}
@@ -75,7 +53,7 @@ func CreateClient(data *modules.ActionCreateData, projectName string) error {
 	feedback.Info(FeedbackPkg, "Generating template...")
 	err = createClientTemplate(modulePath, data.GameName, libraryURL, cgeData)
 	if err != nil {
-		return err
+		return fmt.Errorf("generate template: %w", err)
 	}
 
 	feedback.Info(FeedbackPkg, "Installing dependencies...")
@@ -176,42 +154,4 @@ func execClientTemplate(modulePath, gameName, libraryURL string, cgeData adapter
 	generateEventDefinitions(eventDefinitionsFile, gamePackageName, libraryURL, cgeData)
 	eventDefinitionsFile.Close()
 	return nil
-}
-
-func getClientLibraryURL(libVersion *string) (url string, tag string, err error) {
-	type tagsResp []struct {
-		Name string `json:"name"`
-	}
-	tags, err := request.FetchJSON[tagsResp]("https://api.github.com/repos/code-game-project/go-client/tags", 24*time.Hour)
-	if err != nil {
-		return "", "", fmt.Errorf("fetch go-client git tags: %w", err)
-	}
-	if len(tags) == 0 {
-		return "", "", versions.ErrNoCompatibleVersion
-	}
-	if libVersion == nil {
-		temp := strings.TrimPrefix(strings.Join(strings.Split(tags[0].Name, ".")[:2], "."), "v")
-		libVersion = &temp
-	}
-	version, err := versions.Parse(*libVersion)
-	if err != nil {
-		return "", "", fmt.Errorf("invalid client library version: %w", err)
-	}
-
-	for _, t := range tags {
-		if strings.HasPrefix(t.Name, "v"+(*libVersion)) {
-			tag = t.Name
-			break
-		}
-	}
-	if tag == "" {
-		return "", "", versions.ErrNoCompatibleVersion
-	}
-
-	path := "github.com/code-game-project/go-client/cg"
-	if version[0] > 1 {
-		path = fmt.Sprintf("github.com/code-game-project/go-client/v%d/cg", version[0])
-	}
-
-	return path, tag, nil
 }

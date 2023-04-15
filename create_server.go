@@ -7,6 +7,8 @@ import (
 
 	_ "embed"
 
+	"github.com/code-game-project/cli-utils/exec"
+	"github.com/code-game-project/cli-utils/feedback"
 	"github.com/code-game-project/cli-utils/modules"
 	"github.com/code-game-project/cli-utils/templates"
 )
@@ -26,8 +28,29 @@ var serverDockerfileTemplate string
 //go:embed templates/new/server/dockerignore.tmpl
 var serverDockerignoreTemplate string
 
-func CreateServer(data *modules.ActionCreateData, projectName string) error {
-	fmt.Println("create server")
+func CreateServer(data *modules.ActionCreateData, projectName, modulePath string) error {
+	libraryURL, libraryTag, err := getLibraryURL("go-server", data.LibraryVersion)
+	if err != nil {
+		return fmt.Errorf("determine server library details: %w", err)
+	}
+
+	feedback.Info(FeedbackPkg, "Installing go-server %s...", libraryTag)
+	err = exec.ExecuteDimmed("go", "get", fmt.Sprintf("%s@%s", libraryURL, libraryTag))
+	if err != nil {
+		return fmt.Errorf("install go-server: %w", err)
+	}
+
+	feedback.Info(FeedbackPkg, "Generating template...")
+	err = createServerTemplate(projectName, modulePath, libraryURL)
+	if err != nil {
+		return fmt.Errorf("generate template: %w", err)
+	}
+
+	feedback.Info(FeedbackPkg, "Installing dependencies...")
+	err = exec.ExecuteDimmed("go", "mod", "tidy")
+	if err != nil {
+		return fmt.Errorf("install dependencies: %w", err)
+	}
 	return nil
 }
 
