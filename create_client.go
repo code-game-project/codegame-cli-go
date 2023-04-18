@@ -147,9 +147,9 @@ func execClientTemplate(modulePath, gameName, libraryURL string, cgeData adapter
 		return err
 	}
 
-	eventDefinitionsFile, err := os.Create(filepath.Join(gameDir, "event_definitions.go"))
+	eventDefinitionsFile, err := os.Create(filepath.Join(gameDir, "definitions.go"))
 	if err != nil {
-		return fmt.Errorf("create event_definitions.go: %w", err)
+		return fmt.Errorf("create definitions.go: %w", err)
 	}
 	generateEventDefinitions(eventDefinitionsFile, gamePackageName, libraryURL, cgeData)
 	eventDefinitionsFile.Close()

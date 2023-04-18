@@ -19,7 +19,7 @@ var serverMainTemplate string
 //go:embed templates/new/server/game.go.tmpl
 var serverGameTemplate string
 
-//go:embed templates/new/server/event_definitions.go.tmpl
+//go:embed templates/new/server/definitions.go.tmpl
 var serverEventsTemplate string
 
 //go:embed templates/new/server/Dockerfile.tmpl
@@ -82,7 +82,7 @@ func createServerTemplate(projectName, module, libraryURL string) error {
 		return err
 	}
 
-	return executeServerTemplate(serverEventsTemplate, filepath.Join(packageName, "event_definitions.go"), projectName, libraryURL, module)
+	return executeServerTemplate(serverEventsTemplate, filepath.Join(packageName, "definitions.go"), projectName, libraryURL, module)
 }
 
 func executeServerTemplate(templateText, fileName, projectName, libraryURL, modulePath string) error {
