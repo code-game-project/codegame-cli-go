@@ -31,5 +31,9 @@ func runClient(data *modules.ActionRunClientData) error {
 	cmd.Stderr = os.Stderr
 	cmd.Env = env
 
-	return cmd.Run()
+	err := cmd.Run()
+	if _, ok := err.(*exec.ExitError); ok {
+		return nil
+	}
+	return err
 }
