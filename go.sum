@@ -12,6 +12,14 @@ github.com/code-game-project/cge-parser v0.0.0-20230413142902-7f6369a29beb h1:k6
 github.com/code-game-project/cge-parser v0.0.0-20230413142902-7f6369a29beb/go.mod h1:i23AA3QCejaDZyTIlo4HrG5pT8ut0gABmQIRI+YI3aI=
 github.com/code-game-project/cli-module v0.0.0-20230413165653-7b78a9676547 h1:gGRzYt9ZO+Zg6sW9947EzpswiuN2aRqdM6YdfcV4bFQ=
 github.com/code-game-project/cli-module v0.0.0-20230413165653-7b78a9676547/go.mod h1:QhhVDd0KsXxgLKyL/1AvP4nG3Bg4uIK6i3YNEMCXMF8=
+github.com/code-game-project/cli-module v0.0.0-20230419174608-c6d3711077d3 h1:YHAjehIfPQf3pTj4NO3yFhDUWi4wYmvP5ReqU1XaASQ=
+github.com/code-game-project/cli-module v0.0.0-20230419174608-c6d3711077d3/go.mod h1:WQJ1aMVR7XHhcJ7nBX+PbMmGR32E0w88zwvjzHDLc+E=
+github.com/code-game-project/cli-module v0.0.0-20230419174727-85dcb119b0bb h1:wPXtJVDJykxMSYSWvv2YtiiuW0hq7l9o0Eyp2DnEtGw=
+github.com/code-game-project/cli-module v0.0.0-20230419174727-85dcb119b0bb/go.mod h1:WQJ1aMVR7XHhcJ7nBX+PbMmGR32E0w88zwvjzHDLc+E=
+github.com/code-game-project/cli-module v0.0.0-20230419175750-e34934cc7fe9 h1:qPCmLHAtjSCXMTLlUKxKP8N7WoKDXjPRKRsd3IOI/pU=
+github.com/code-game-project/cli-module v0.0.0-20230419175750-e34934cc7fe9/go.mod h1:WQJ1aMVR7XHhcJ7nBX+PbMmGR32E0w88zwvjzHDLc+E=
+github.com/code-game-project/cli-module v0.0.0-20230421102138-3c456d354cbf h1:Q/SZY8Jhojjldxv33DB3RAynouecSQPk4WmqukXrrWA=
+github.com/code-game-project/cli-module v0.0.0-20230421102138-3c456d354cbf/go.mod h1:V1mLRNM6r2HhE/Z3CnZwFwnT042Cj4p6B5sDKpoaoGs=
 github.com/code-game-project/cli-utils v0.0.0-20230413165132-133f4bcc43c4 h1:mHQMdeyQP5b9GzPyjS2fopAs/le5GCgauA6r3tY5tvY=
 github.com/code-game-project/cli-utils v0.0.0-20230413165132-133f4bcc43c4/go.mod h1:sNpO4PN44Yp8VSIg35V+KUY3ML+qdxjI8Zye6UO1GTE=
 github.com/code-game-project/cli-utils v0.0.0-20230414165041-62809b2117b1 h1:Gjj98TjSwPUlRnPR0cFDPC+ppDKW9aiiueSUOQZo6AE=
@@ -20,6 +28,10 @@ github.com/code-game-project/cli-utils v0.0.0-20230415100645-ea1abbaf748d h1:nHS
 github.com/code-game-project/cli-utils v0.0.0-20230415100645-ea1abbaf748d/go.mod h1:sNpO4PN44Yp8VSIg35V+KUY3ML+qdxjI8Zye6UO1GTE=
 github.com/code-game-project/cli-utils v0.0.0-20230415102921-d1864ac391e7 h1:JHfyZO4aLS1inibOyrCSGLQu/v3M6FMpUnYh+vq27fM=
 github.com/code-game-project/cli-utils v0.0.0-20230415102921-d1864ac391e7/go.mod h1:r6IF2yCc3C3p00FpDsF41z8+VYv9qRJyWqS199ShSL0=
+github.com/code-game-project/cli-utils v0.0.0-20230419174401-f333dd64e02e h1:IWJWN2DxDBRmmMMbqQN6BDmmaoG7l38QW8w30ZjFbvo=
+github.com/code-game-project/cli-utils v0.0.0-20230419174401-f333dd64e02e/go.mod h1:r6IF2yCc3C3p00FpDsF41z8+VYv9qRJyWqS199ShSL0=
+github.com/code-game-project/cli-utils v0.0.0-20230419175501-a9c6504ec787 h1:EMaWo8j7768EjOovckerZ1Gel1QXl47yDh1Aq9kSqnY=
+github.com/code-game-project/cli-utils v0.0.0-20230419175501-a9c6504ec787/go.mod h1:r6IF2yCc3C3p00FpDsF41z8+VYv9qRJyWqS199ShSL0=
 github.com/creack/pty v1.1.17 h1:QeVUsEDNrLBW4tMgZHvxy18sKtr6VI492kBhUfhDJNI=
 github.com/creack/pty v1.1.17/go.mod h1:MOBLtS5ELjhRRrroQr9kyvTxUAFNvYEK993ew/Vr4O4=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

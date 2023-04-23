@@ -8,26 +8,13 @@ THE CODE IS REGENERATED.
 */
 
 import (
-	"errors"
 	"fmt"
-	"os"
-	"strings"
 
 	"{{.LibraryURL}}"
-	"github.com/spf13/pflag"
 )
 
-var URL string
-
-func init() {
-	url := os.Getenv("CG_GAME_URL")
-	if url != "" {
-		URL = url
-	}
-}
-
 type Game struct {
-	Id         string
+	ID         string
 	Config     GameConfig
 	socket     *cg.Socket
 	spectating bool
@@ -39,224 +26,53 @@ func (g *Game) IsSpectating() bool {
 }
 
 type Player struct {
-	Id       string
+	ID       string
 	Username string
 }
 
-// Init parses command line arguments with pflag and calls either CreateAndJoinGame, CreateAndSpectateGame, JoinGame, SpectateGame or ReconnectGame depending on the provided commands:
-//
-//     Operations:\n")
-//         create <username>                         Create a new game.
-//         join <game_id> <username> <join_secret?>  Join an existing game.
-//         reconnect <username>                      Reconnect to a previous session.
-//     Flags:
-//         --public    Make the created game public.
-//         --protected Make the created game protected.
-//         --spectate  Spectate the created/joined game. The username is not neccessary if this flag is set.
-//
-// This function calls pflag.Parse() internally. If you want to add your own flags, you will need to register them with pflag *before* calling this function.
-func Init(config GameConfig) (*Game, error) {
-	pflag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "USAGE: %s [OPTIONS] <operation>\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\nOperations:\n")
-		fmt.Fprintf(os.Stderr, "  create <username>                         Create a new game.\n")
-		fmt.Fprintf(os.Stderr, "  join <game_id> <username> <join_secret?>  Join an existing game.\n")
-		fmt.Fprintf(os.Stderr, "  reconnect <username>                      Reconnect to a previous session.\n")
-		fmt.Fprintf(os.Stderr, "\nFlags:\n")
-		pflag.PrintDefaults()
-	}
-
-	var public bool
-	pflag.BoolVar(&public, "public", false, "Make the created game public.")
-	var protected bool
-	pflag.BoolVar(&protected, "protected", false, "Make the created game protected.")
-	var spectate bool
-	pflag.BoolVar(&spectate, "spectate", false, "Spectate the created/joined game. The username is not neccessary if this flag is set.")
-	pflag.Parse()
-
-	var operation string
-	if pflag.NArg() > 1 || (spectate && pflag.NArg() > 0) {
-		operation = strings.ToLower(pflag.Arg(0))
-	} else {
-		pflag.Usage()
-		os.Exit(1)
-	}
-
-	if URL == "" {
-		return nil, errors.New("CG_GAME_URL is empty.")
-	}
-
-	var game *Game
-	var err error
-	switch operation {
-	case "create":
-		var joinSecret string
-		if spectate {
-			game, joinSecret, err = CreateAndSpectateGame(public, protected, config)
-		} else {
-			game, joinSecret, err = CreateAndJoinGame(public, protected, pflag.Arg(1), config)
-		}
-		if game != nil {
-			fmt.Println("Game ID:", game.Id)
-		}
-		if joinSecret != "" {
-			fmt.Println("Join secret:", joinSecret)
-		}
-	case "join":
-		if (!spectate && pflag.NArg() < 3) || (spectate && pflag.NArg() < 2) {
-			fmt.Fprintln(os.Stderr, "No game_id specified!")
-			pflag.Usage()
-			os.Exit(1)
-		}
-		if spectate {
-			game, err = SpectateGame(pflag.Arg(1))
-		} else {
-			var joinSecret string
-			if pflag.NArg() > 3 {
-				joinSecret = pflag.Arg(3)
-			}
-			game, err = JoinGame(pflag.Arg(1), pflag.Arg(2), joinSecret)
-		}
-	case "reconnect":
-		game, err = ReconnectGame(pflag.Arg(1))
-	default:
-		fmt.Fprintf(os.Stderr, "Invalid operation '%s'!\n", operation)
-		pflag.Usage()
-		os.Exit(1)
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	return game, nil
-}
-
-// CreateAndJoinGame creates a new game and joins it immediately after.
-func CreateAndJoinGame(public, protected bool, username string, config GameConfig) (*Game, string, error) {
-	socket, err := cg.NewSocket(URL)
-	if err != nil {
-		return nil, "", fmt.Errorf("failed to connect to server: %s", err)
-	}
-
-	gameId, joinSecret, err := socket.CreateGame(public, protected, config)
-	if err != nil {
-		return nil, "", fmt.Errorf("failed to create game: %s", err)
-	}
-
-	err = socket.Join(gameId, username, joinSecret)
-	if err != nil {
-		return nil, "", fmt.Errorf("failed to join game: %s", err)
-	}
-
-	config, err = cg.FetchGameConfig[GameConfig](socket, gameId)
-	if err != nil {
-		return nil, "", err
-	}
-
-	return &Game{
-		Id:     gameId,
-		Config: config,
-		socket: socket,
-	}, joinSecret, nil
-}
-
-// CreateAndSpectateGame creates a new game and spectates it immediately after.
-func CreateAndSpectateGame(public, protected bool, config GameConfig) (*Game, string, error) {
-	socket, err := cg.NewSocket(URL)
-	if err != nil {
-		return nil, "", fmt.Errorf("failed to connect to server: %s", err)
-	}
-
-	gameId, joinSecret, err := socket.CreateGame(public, protected, config)
-	if err != nil {
-		return nil, "", fmt.Errorf("failed to create game: %s", err)
-	}
-
-	err = socket.Spectate(gameId)
-	if err != nil {
-		return nil, "", fmt.Errorf("failed to spectate game: %s", err)
-	}
-
-	config, err = cg.FetchGameConfig[GameConfig](socket, gameId)
-	if err != nil {
-		return nil, "", err
-	}
-
-	return &Game{
-		Id:     gameId,
-		Config: config,
-		socket: socket,
-	}, joinSecret, nil
-}
-
-// JoinGame joins the game with the specified id.
-// Leave joinSecret empty if the game is not protected.
-func JoinGame(gameId, username, joinSecret string) (*Game, error) {
-	socket, err := cg.NewSocket(URL)
+// Connect connects a socket to a player.
+func Connect(gameURL, gameID, playerID, playerSecret string) (*Game, error) {
+	socket, err := cg.NewSocket(gameURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to server: %s", err)
 	}
 
-	err = socket.Join(gameId, username, joinSecret)
+	err = socket.Connect(gameID, playerID, playerSecret)
 	if err != nil {
-		return nil, fmt.Errorf("failed to join game: %s", err)
+		return nil, fmt.Errorf("failed to connect to player: %s", err)
 	}
-
-	config, err := cg.FetchGameConfig[GameConfig](socket, gameId)
+	
+	config, err := cg.FetchGameConfig[GameConfig](socket, gameID)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Game{
-		Id:     gameId,
+		ID:     socket.Session().GameId,
 		Config: config,
 		socket: socket,
 	}, nil
 }
 
-// ReconnectGame joins a previous session from the session store.
-func ReconnectGame(username string) (*Game, error) {
-	socket, err := cg.NewSocket(URL)
+// Spectate connects a socket as a spectator to a game.
+func Spectate(gameURL, gameID string) (*Game, error) {
+	socket, err := cg.NewSocket(gameURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to server: %s", err)
 	}
 
-	err = socket.RestoreSession(username)
-	if err != nil {
-		return nil, fmt.Errorf("failed to reconnect: %s", err)
-	}
-
-	config, err := cg.FetchGameConfig[GameConfig](socket, socket.Session().GameId)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Game{
-		Id:     socket.Session().GameId,
-		Config: config,
-		socket: socket,
-	}, nil
-}
-
-// SpectateGame joins a game as a spectator.
-func SpectateGame(gameId string) (*Game, error) {
-	socket, err := cg.NewSocket(URL)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to server: %s", err)
-	}
-
-	err = socket.Spectate(gameId)
+	err = socket.Spectate(gameID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to spectate game: %s", err)
 	}
 	
-	config, err := cg.FetchGameConfig[GameConfig](socket, gameId)
+	config, err := cg.FetchGameConfig[GameConfig](socket, gameID)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Game{
-		Id:     socket.Session().GameId,
+		ID:     socket.Session().GameId,
 		Config: config,
 		socket: socket,
 	}, nil
@@ -276,9 +92,9 @@ func (g *Game) Update() error {
 	return err
 }
 
-// Username returns the username associated with playerId.
-func (g *Game) Username(playerId string) string {
-	return g.socket.Username(playerId)
+// Username returns the username associated with playerID.
+func (g *Game) Username(playerID string) string {
+	return g.socket.Username(playerID)
 }
 
 // Session returns details of the current session.

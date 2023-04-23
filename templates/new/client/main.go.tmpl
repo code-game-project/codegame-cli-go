@@ -2,11 +2,21 @@ package main
 
 import (
 	"log"
+	"os"
+
 	"{{.ModulePath}}/{{.PackageName}}"
 )
 
 func main() {
-	game, err := {{.PackageName}}.Init({{.PackageName}}.GameConfig{})
+	var game *{{.PackageName}}.Game
+	var err error
+
+	// CG_* environment variables are set by `codegame run`
+	if os.Getenv("CG_SPECTATE") == "1" {
+		game, err = {{.PackageName}}.Spectate(os.Getenv("CG_GAME_URL"), os.Getenv("CG_GAME_ID"))
+	} else {
+		game, err = {{.PackageName}}.Connect(os.Getenv("CG_GAME_URL"), os.Getenv("CG_GAME_ID"), os.Getenv("CG_PLAYER_ID"), os.Getenv("CG_PLAYER_SECRET"))
+	}
 	if err != nil {
 		log.Fatal(err)
 	}

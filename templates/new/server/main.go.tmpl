@@ -2,29 +2,24 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"os"
 	"strconv"
 	"time"
 
 	"{{.LibraryURL}}"
+
 	"{{.ModulePath}}/{{.PackageName}}"
-	"github.com/spf13/pflag"
 )
 
 func main() {
-	var port int
-	pflag.IntVarP(&port, "port", "p", 0, "The network port of the game server.")
-	pflag.Parse()
-
-	if port == 0 {
-		portStr, ok := os.LookupEnv("CG_PORT")
-		if ok {
-			port, _ = strconv.Atoi(portStr)
+	port := 8080
+	if portEnv := os.Getenv("CG_PORT"); portEnv != "" {
+		var err error
+		port, err = strconv.Atoi(portEnv)
+		if err != nil {
+			log.Fatal("invalid port")
 		}
-	}
-
-	if port == 0 {
-		port = 8080
 	}
 
 	server := cg.NewServer("{{.Name}}", cg.ServerConfig{

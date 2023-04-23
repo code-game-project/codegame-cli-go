@@ -4,8 +4,8 @@ go 1.18
 
 require (
 	github.com/code-game-project/cge-parser v0.0.0-20230413142902-7f6369a29beb
-	github.com/code-game-project/cli-module v0.0.0-20230413165653-7b78a9676547
-	github.com/code-game-project/cli-utils v0.0.0-20230415102921-d1864ac391e7
+	github.com/code-game-project/cli-module v0.0.0-20230421102138-3c456d354cbf
+	github.com/code-game-project/cli-utils v0.0.0-20230419175501-a9c6504ec787
 	golang.org/x/mod v0.10.0
 )
 

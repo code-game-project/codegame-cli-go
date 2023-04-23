@@ -13,6 +13,9 @@ import (
 
 var FeedbackPkg = feedback.Package("module-go")
 
+// populated by CI
+var version = "0.0"
+
 func main() {
 	workingDir, err := os.Getwd()
 	if err != nil {
@@ -20,10 +23,12 @@ func main() {
 	}
 	projectName := filepath.Base(workingDir)
 
-	module.Run("go", "Go", map[modules.ProjectType][]versions.Version{
+	module.Run("go", "Go", versions.MustParse(version), map[modules.ProjectType][]versions.Version{
 		modules.ProjectType_CLIENT: {versions.MustParse("0.9")},
 		modules.ProjectType_SERVER: {versions.MustParse("0.9")},
 	}, module.Config{
-		Create: create(projectName),
+		Create:    create(projectName),
+		RunClient: runClient,
+		RunServer: runServer,
 	}, feedback.SeverityInfo)
 }
